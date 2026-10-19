@@ -1,0 +1,31 @@
+{
+    "format": "cadcraft-edition",
+    "version": 1,
+    "app": "bimcraft",
+    "name": "BimCraft",
+    "edition": "browser",
+    "release": "0.4",
+    "semver": "0.4.0",
+    "tag": "bimcraft-v0.4.0",
+    "zip": "bimcraft-browser-edition-v0.4.0.zip",
+    "packed_at": "2026-10-13T18:44:50Z",
+    "from": {
+        "build": "0.4",
+        "released_at": "2026-10-13 17:59 UTC",
+        "git": "20b9b74 (dev had uncommitted changes)"
+    },
+    "license": "Apache-2.0",
+    "libs": {
+        "manifold-3d": "3.5.4",
+        "three": "0.186.1",
+        "bootstrap": "5.3.8",
+        "bootstrap-icons": "1.13.2",
+        "archivo": "5.2.8"
+    },
+    "changes_to_copied_files": [
+        "Library URLs written as /assets/vendor/<lib>/current/ are pinned to the versions listed in release.json."
+    ],
+    "files": 154,
+    "bytes_before_this_file": 7269414,
+    "notes": "Our own IFC engine replaces web-ifc: big files read in the background, curved surfaces and IFC4X3 alignments draw, and Archicad exports open fully. Delete, cut, copy and paste any element. Hide, isolate and see-through, a model tree, color by property, and several models in one scene. Find with search sets, clash check, model checks, BCF 2.1 issues, measure, walk mode, section box with filled cuts, quantity totals and a spaces schedule, compare versions and a 4D schedule. Pick objects in a drawing's 3D view. Touch screens, recovery of unsaved work, Ctrl+K, and a draft Spanish (Mexico) translation not yet reviewed. The offline copy is about half the size."
+}

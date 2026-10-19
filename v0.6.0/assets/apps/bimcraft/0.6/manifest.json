@@ -1,0 +1,35 @@
+{
+  "app": "bimcraft",
+  "css": [
+    "bimcraft.css",
+    "frame/frame-panel.css"
+  ],
+  "module": "bimcraft.js",
+  "imports": {
+    "three": "./assets/vendor/three/0.186.1/three.module.js",
+    "three/addons/": "./assets/vendor/three/0.186.1/addons/",
+    "manifold-3d": "./assets/vendor/manifold-3d/3.5.4/manifold.js",
+    "laz-perf": "./assets/vendor/laz-perf/0.0.7/laz-perf.js",
+    "web-e57/": "./assets/vendor/web-e57/1.2.0/",
+    "proj4": "./assets/vendor/proj4/2.22.0/proj4.esm.min.js",
+    "@noble/curves/": "./assets/vendor/noble-curves/2.4.0/",
+    "@noble/hashes/": "./assets/vendor/noble-hashes/2.4.0/",
+    "@noble/ciphers/": "./assets/vendor/noble-ciphers/2.4.0/",
+    "three-gpu-pathtracer": "./assets/vendor/three-gpu-pathtracer/0.0.26/index.module.js",
+    "three-mesh-bvh": "./assets/vendor/three-mesh-bvh/0.9.15/index.module.js",
+    "three/examples/jsm/postprocessing/Pass.js": "./assets/vendor/three-gpu-pathtracer/0.0.26/three-addons/Pass.js",
+    "delaunator": "./assets/vendor/delaunator/5.1.0/index.js",
+    "robust-predicates": "./assets/vendor/robust-predicates/3.0.3/index.js",
+    "geotiff": "./assets/vendor/geotiff/3.0.5/geotiff.esm.min.js"
+  },
+  "phone": { "toolbar": "[data-toolbar]", "options": "[data-modelbar]", "hint": "[data-model-hint], .bc-status" },
+  "panels": [
+    "move",
+    "window"
+  ],
+  "addons": "own",
+  "accepts": [
+    "live"
+  ],
+  "input": "input-bimcraft.js"
+}

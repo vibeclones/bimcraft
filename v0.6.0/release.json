@@ -1,0 +1,42 @@
+{
+    "format": "cadcraft-edition",
+    "version": 1,
+    "app": "bimcraft",
+    "name": "BimCraft",
+    "edition": "browser",
+    "release": "0.6",
+    "semver": "0.6.0",
+    "tag": "bimcraft-v0.6.0",
+    "zip": "bimcraft-browser-edition-v0.6.0.zip",
+    "packed_at": "2026-10-19T00:04:05Z",
+    "from": {
+        "build": "0.6",
+        "released_at": "2026-10-19 00:03 UTC",
+        "git": "28f3444 (dev had uncommitted changes)"
+    },
+    "license": "Apache-2.0",
+    "libs": {
+        "delaunator": "5.1.0",
+        "geotiff": "3.0.5",
+        "laz-perf": "0.0.7",
+        "manifold-3d": "3.5.4",
+        "noble-ciphers": "2.4.0",
+        "noble-curves": "2.4.0",
+        "noble-hashes": "2.4.0",
+        "proj4": "2.22.0",
+        "robust-predicates": "3.0.3",
+        "three": "0.186.1",
+        "three-gpu-pathtracer": "0.0.26",
+        "three-mesh-bvh": "0.9.15",
+        "web-e57": "1.2.0",
+        "bootstrap": "5.3.8",
+        "bootstrap-icons": "1.13.2",
+        "archivo": "5.2.8"
+    },
+    "changes_to_copied_files": [
+        "Library URLs written as /assets/vendor/<lib>/current/ are pinned to the versions listed in release.json."
+    ],
+    "files": 403,
+    "bytes_before_this_file": 15345859,
+    "notes": "BimCraft gets the BIM tools you asked for on Discord: the pointer's coordinates with the origin and survey point, trim, extend and corner walls, grids with bubbles and columns at the crossings, floors of any shape and ramps, site and levels as tools, drawing on a point cloud, walls, doors and windows from a traced DWG or DXF, CivilCraft's LandXML ground, linked IFC models, and a project browser with view ranges, view templates and sheets of your own. Pipes and ducts with their fittings, valves and systems; assistants that can draw; frame analysis; setting-out points and as-built checks; VR review; project bundles and a kit for working between two BIM programs (not yet tried with those programs themselves); 4D stages and packages; E57, PLY, PCD and PTX. A second round adds a scale, crop region and underlay per plan, reflected ceiling plans, callouts, drafting lines and hatch in a view, curved walls, a wall's location line, moving and turning library items, gable and shed dormers, spiral stairs, interior elevations, level marks, dimensions and tags on elevations and sections, a .glb for rendering programs, Assets and Daylight tabs, and doors, windows and furniture in families (each size an ordinary IFC type) with a family editor. From a community contributor: wall drawing references, alignment guides while drawing walls, and a basement egress window with its well. Fixed: roofs that followed posts and garden walls, \"Hinges: Flip\" on fixed windows, the Render dialog in the model theme, the update message, Paint from the plan-only layout, painted walls that lost their color, hollow-looking sections, the section bar under the drawing bar, and a turned building is now shown square. Spanish (es-MX) and, new, Bahasa Indonesia are machine-made drafts, not yet reviewed."
+}

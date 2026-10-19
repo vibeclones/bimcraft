@@ -1,0 +1,5 @@
+@noble/hashes 2.4.0 (MIT, Copyright (c) Paul Miller, https://paulmillr.com) — https://github.com/paulmillr/noble-hashes
+Taken unmodified from the npm package @noble/hashes@2.4.0 (npm install, 2026-10-14): every .js file, LICENSE,
+package.json and README.md; the TypeScript sources (src/), .d.ts and source maps left out.
+Used by assets/js/live-crypto.js (Studio Live handshake and frames; docs/LIVE-CRYPTO.md), mapped in a build's import map as
+"@noble/hashes/" → "/assets/vendor/noble-hashes/current/".

@@ -1,0 +1,41 @@
+{
+  "name": "web-e57",
+  "collaborators": [
+    "Prolincur Technologies <https://prolincur.com>"
+  ],
+  "description": "Provides capability to convert E57 file into XYZ, LAZ, XML, JSON formats",
+  "version": "1.2.0",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prolincur/web-e57.git"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./e57.js",
+      "require": "./e57.js",
+      "types": "./e57.d.ts"
+    }
+  },
+  "files": [
+    "e57_bg.wasm",
+    "e57.js",
+    "e57_bg.js",
+    "e57.d.ts"
+  ],
+  "module": "e57.js",
+  "types": "e57.d.ts",
+  "sideEffects": [
+    "./e57.js",
+    "./snippets/*"
+  ],
+  "keywords": [
+    "e57",
+    "pointcloud",
+    "3D scan",
+    "laz",
+    "xyz",
+    "photogrammetry"
+  ]
+}
