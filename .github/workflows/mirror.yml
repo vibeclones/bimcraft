@@ -1,0 +1,50 @@
+name: Mirror upstream release
+
+on:
+  schedule:
+    - cron: "19 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Upstream release tag to mirror (blank = latest)"
+        required: false
+      limit:
+        description: "How many recent upstream releases to look at, or 'taste' to thin the whole history toward the past"
+        required: false
+        default: "40"
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency: mirror
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mirror
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM: getcadcraft/bimcraft
+          NAME: bimcraft
+          ASSET_RE: 'browser-edition.*[.]zip$'
+          TAG_STRIP: 'bimcraft-v'
+          TAG: ${{ inputs.tag }}
+          LIMIT: ${{ inputs.limit || '40' }}
+        run: bash scripts/mirror.sh
+      - name: Commit and request a Pages build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing new"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Mirror upstream release"
+          git push
+          gh api -X POST "repos/${{ github.repository }}/pages/builds"
