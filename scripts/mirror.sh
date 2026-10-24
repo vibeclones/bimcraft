@@ -48,6 +48,16 @@ for tag in $tags; do
   # Unpacked, a web build is about 2.4 times its zip. Stop once the next one would not fit.
   size=$(du -sm --exclude=.git . | cut -f1)
   need=$(( zip_bytes * 24 / 10 / 1048576 ))
+  # A newer release takes the place of the oldest hosted ones: drop those (never one newer than this release)
+  # until it fits. Otherwise a full mirror would stay stuck on whatever was newest when it filled up.
+  while [ $((size + need)) -gt "$CAP_MB" ]; do
+    oldest=$(find . -maxdepth 1 -type d -name 'v[0-9]*' -printf '%f\n' | sed 's/^v//' | sort -V | head -n1)
+    [ -n "$oldest" ] && [ "$oldest" != "$ver" ] && [ "$(printf '%s\n%s\n' "$oldest" "$ver" | sort -V | head -n1)" = "$oldest" ] || break
+    echo "Making room for $tag: dropping v${oldest} (${size} MB now)"
+    rm -rf "v${oldest}"
+    bash scripts/skip.sh add "$oldest" "Dropped to stay within our storage limit."
+    size=$(du -sm --exclude=.git . | cut -f1)
+  done
   if [ $((size + need)) -gt "$CAP_MB" ] && [ -n "$(find . -maxdepth 1 -type d -name 'v[0-9]*' | head -n1)" ]; then
     echo "Stopping at $tag: ${size} MB now + about ${need} MB would pass the ${CAP_MB} MB cap"
     bash scripts/skip.sh add "$ver" "Left out to stay within our storage limit."
