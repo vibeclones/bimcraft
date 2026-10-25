@@ -1,0 +1,46 @@
+{
+    "format": "cadcraft-edition",
+    "version": 1,
+    "app": "bimcraft",
+    "name": "BimCraft",
+    "edition": "browser",
+    "release": "0.7",
+    "semver": "0.7.0",
+    "tag": "bimcraft-v0.7.0",
+    "zip": "bimcraft-browser-edition-v0.7.0.zip",
+    "packed_at": "2026-10-25T01:39:29Z",
+    "from": {
+        "build": "0.7",
+        "released_at": "2026-10-25 01:38 UTC",
+        "git": "d5ef8b8 (dev had uncommitted changes)"
+    },
+    "license": "Apache-2.0",
+    "libs": {
+        "delaunator": "5.1.0",
+        "geotiff": "3.0.5",
+        "laz-perf": "0.0.7",
+        "manifold-3d": "3.5.4",
+        "noble-ciphers": "2.4.0",
+        "noble-curves": "2.4.0",
+        "noble-hashes": "2.4.0",
+        "oidn-weights": "2.3.0",
+        "pdfjs": "6.3.289",
+        "proj4": "2.22.0",
+        "robust-predicates": "3.0.3",
+        "three": "0.186.1",
+        "three-gpu-pathtracer": "0.0.26",
+        "three-mesh-bvh": "0.9.15",
+        "three-webgpu": "0.186.1",
+        "web-e57": "1.2.0",
+        "bootstrap": "5.3.8",
+        "bootstrap-icons": "1.13.2",
+        "archivo": "5.2.8"
+    },
+    "changes_to_copied_files": [
+        "Renamed pdf.min.mjs, pdf.mjs, pdf.worker.min.mjs, pdf.worker.mjs to .js (and every reference to them), so servers that do not know the .mjs type still serve them as JavaScript.",
+        "Library URLs written as /assets/vendor/<lib>/current/ are pinned to the versions listed in release.json."
+    ],
+    "files": 907,
+    "bytes_before_this_file": 40341551,
+    "notes": "Release 0.7 (notes: docs/releases/0.7.md)"
+}

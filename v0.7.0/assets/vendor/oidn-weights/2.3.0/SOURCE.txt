@@ -1,0 +1,13 @@
+Intel Open Image Denoise — trained network weights (unmodified)
+
+File:     rt_hdr_alb_nrm_small.tza (641480 bytes)
+SHA-256:  980ea307e7825cae23ed8b1addf8de62ece84b61094795a5631ebf1c91b2e1a7
+Source:   https://github.com/RenderKit/oidn-weights (Git LFS), commit 28883d1769d5930e13cf7f1676dd852bd81ed9e7
+          ("add v2.3 fast quality weights"; the weights of Open Image Denoise 2.3)
+Licence:  Apache License 2.0 (LICENSE.txt in this folder, from the same repository)
+Copyright: Intel Corporation
+
+Used by CadCraft's renderer (assets/apps/*/dev/render/pt-denoise.js, pt-denoise-gpu.js): our own inference of the network these
+weights belong to (a U-Net of 3 × 3 convolutions), written from the format and layer list of Open Image Denoise
+(https://github.com/RenderKit/oidn, Apache-2.0). No Open Image Denoise code is included. Decision and measurements:
+docs/spikes/RN.5-denoiser.md.
