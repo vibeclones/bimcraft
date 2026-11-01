@@ -1,0 +1,27 @@
+{
+    "app": "bimcraft",
+    "version": "0.8",
+    "released_at": "2026-11-01 16:29 UTC",
+    "git": "d5ef8b8 (dev had uncommitted changes)",
+    "libs": {
+        "coolprop": "6.6.0",
+        "delaunator": "5.1.0",
+        "geotiff": "3.0.5",
+        "laz-perf": "0.0.7",
+        "manifold-3d": "3.5.4",
+        "noble-ciphers": "2.4.0",
+        "noble-curves": "2.4.0",
+        "noble-hashes": "2.4.0",
+        "oidn-weights": "2.3.0",
+        "pdfjs": "6.3.289",
+        "proj4": "2.22.0",
+        "rdkit": "2026.9.1",
+        "robust-predicates": "3.0.3",
+        "three": "0.186.1",
+        "three-gpu-pathtracer": "0.0.26",
+        "three-mesh-bvh": "0.9.15",
+        "three-webgpu": "0.186.1",
+        "web-e57": "1.2.0"
+    },
+    "notes": ""
+}

@@ -1,0 +1,11 @@
+three-gpu-pathtracer 0.0.26 (MIT, Copyright (c) 2021 Garrett Johnson) — https://github.com/gkjohnson/three-gpu-pathtracer
+Taken unmodified from the npm package three-gpu-pathtracer@0.0.26 (npm pack, 2026-10-14;
+tarball sha256 065dfb412e1f9bee80944f381fb447140e14e41dfce9f44be2a793410003d66c): build/index.module.js, LICENSE, README.md.
+Source maps, the UMD build and src/ left out.
+three-addons/Pass.js is three.js's own examples/jsm/postprocessing/Pass.js from the npm package three@0.186.1 (MIT,
+Copyright 2010-2025 three.js authors; tarball sha256 8cd068708ea44f2c73c944b1cead2ba2f0d5c15c8fc194e5700f4e4f4a033fe7, the
+release /assets/vendor/three/0.186.1 is), unmodified, with three.js's LICENSE beside it: the path tracer imports it by the
+name "three/examples/jsm/postprocessing/Pass.js", which a build's import map points here.
+Used by modelcraft/dev/render/render-pt.js (and BimCraft's synced copy): the "High quality" mode of Render a picture
+(0.5 RC.11 (c)); loaded only when that mode runs. Import map: "three-gpu-pathtracer" →
+"/assets/vendor/three-gpu-pathtracer/current/index.module.js". Needs three-mesh-bvh (its own vendor folder).

@@ -1,0 +1,120 @@
+{
+  "name": "coolprop-wasm",
+  "version": "6.6.0",
+  "description": "CoolProp thermodynamic property library compiled to WebAssembly - Complete AbstractState API",
+  "type": "module",
+  "main": "index.js",
+  "module": "index.js",
+  "types": "coolprop.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.js",
+      "types": "./coolprop.d.ts"
+    },
+    "./simple": {
+      "import": "./simple.js",
+      "types": "./coolprop.d.ts"
+    },
+    "./react": {
+      "import": "./react.js",
+      "types": "./coolprop.d.ts"
+    },
+    "./coolprop": {
+      "import": "./coolprop.js",
+      "types": "./coolprop.d.ts"
+    },
+    "./wrappers": {
+      "import": "./coolprop-wrappers.ts",
+      "types": "./coolprop-wrappers.ts"
+    }
+  },
+  "files": [
+    "index.js",
+    "simple.js",
+    "react.js",
+    "coolprop.js",
+    "coolprop.wasm",
+    "coolprop.d.ts",
+    "coolprop_generated.d.ts",
+    "coolprop-wrappers.ts",
+    "README.md",
+    "docs/",
+    "examples/"
+  ],
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node tests/unit/test_basic.mjs",
+    "test:unit": "node tests/unit/test_comprehensive.mjs",
+    "test:property": "node tests/property-based/test_derivative_accuracy.mjs",
+    "test:integration": "node tests/integration/test_error_handling.mjs",
+    "test:memory": "node tests/memory/test_memory_management.mjs",
+    "test:performance": "node tests/performance/test_performance_validation.mjs",
+    "test:browser": "echo 'Open tests/browser/test_browser_compatibility.html in browser'",
+    "test:loading": "node tests/integration/test_loading_patterns.mjs",
+    "test:nodejs": "node tests/integration/test_nodejs_integration.mjs",
+    "test:build-tools": "node tests/integration/test_build_tools.mjs",
+    "test:typescript": "node tests/integration/test_typescript_definitions.mjs",
+    "test:all": "node scripts/run_final_integration_tests.mjs",
+    "test:comprehensive": "node scripts/run_comprehensive_validation.mjs",
+    "test:enhanced": "node scripts/run_enhanced_test_suite.mjs",
+    "build": "./build/build_enhanced.sh size",
+    "build:basic": "./build/build.sh",
+    "build:size": "./build/build_enhanced.sh size",
+    "build:speed": "./build/build_enhanced.sh speed",
+    "build:debug": "./build/build_enhanced.sh debug",
+    "build:docker": "./build/docker_build.sh",
+    "validate": "node scripts/run_comprehensive_validation.mjs",
+    "docs": "echo 'See docs/ directory for comprehensive documentation'",
+    "examples": "node examples/nodejs-examples.mjs",
+    "debug": "node debug/debug_enum_structure.mjs"
+  },
+  "keywords": [
+    "thermodynamics",
+    "properties",
+    "wasm",
+    "webassembly",
+    "coolprop",
+    "fluid",
+    "engineering",
+    "abstractstate",
+    "derivatives",
+    "mixtures",
+    "phase-envelope",
+    "saturation",
+    "typescript"
+  ],
+  "author": "CoolProp Team",
+  "license": "MIT",
+  "homepage": "http://www.coolprop.org/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CoolProp/CoolProp.git",
+    "directory": "wrappers/Javascript"
+  },
+  "bugs": {
+    "url": "https://github.com/CoolProp/CoolProp/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {},
+  "bundleDependencies": [
+    "coolprop.wasm"
+  ],
+  "browser": {
+    "fs": false,
+    "path": false
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  }
+}

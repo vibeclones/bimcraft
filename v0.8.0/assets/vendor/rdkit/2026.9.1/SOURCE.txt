@@ -1,0 +1,5 @@
+@rdkit/rdkit 2026.9.1 (npm) — RDKit MinimalLib compiled to WebAssembly, https://github.com/rdkit/rdkit  (BSD-3-Clause)
+Tarball sha256 ae6b0e42b85114a2f38ef890fcb229a90b54b0b42d4636c50ae1c7f77d85ffe0
+LICENSE: the project's BSD-3-Clause text from github.com/rdkit/rdkit license.txt (the npm package ships none).
+Files copied unchanged from the tarball: RDKit_minimal.js, RDKit_minimal.wasm (about 6 MB), package.json.
+Loaded on demand by the structure editor (0.8 CH.24, owner 2026-10-29: RDKit in wasm as an add-on), never at page start.
