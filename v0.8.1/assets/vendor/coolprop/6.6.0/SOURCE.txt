@@ -1,0 +1,5 @@
+coolprop-wasm 6.6.0 (npm) — https://github.com/CoolProp/CoolProp  (CoolProp itself: MIT; npm package licence field: MIT)
+Tarball sha256 a393f205fa2379cd0560fda698cd8939a1a89222208ea0c727d5533efc48ba0a
+LICENSE: the project's MIT license text from github.com/CoolProp/CoolProp (the npm package ships none).
+Files copied unchanged from the tarball: coolprop.js (Emscripten loader) and coolprop.wasm (about 6.5 MB), package.json.
+Loaded on demand by the process add-on's "pure fluids" button (0.8 CH.1, owner 2026-10-29: CoolProp as an on-demand add-on), never at page start.

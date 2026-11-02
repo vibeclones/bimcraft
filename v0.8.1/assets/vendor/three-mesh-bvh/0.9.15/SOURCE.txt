@@ -1,0 +1,6 @@
+three-mesh-bvh 0.9.15 (MIT, Copyright (c) 2019 Garrett Johnson) — https://github.com/gkjohnson/three-mesh-bvh
+Taken unmodified from the npm package three-mesh-bvh@0.9.15 (npm pack, 2026-10-14;
+tarball sha256 1288e544570dac1338d264f7edbd83c565b1025077afc6f0e2c3cae1cc016f19): build/index.module.js, LICENSE, README.md.
+Source maps, the UMD build and src/ left out.
+Used by three-gpu-pathtracer (Render a picture › High quality, 0.5 RC.11 (c)). Import map: "three-mesh-bvh" →
+"/assets/vendor/three-mesh-bvh/current/index.module.js".

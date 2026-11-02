@@ -1,0 +1,36 @@
+three.js 0.186.1 — the WebGPU build (MIT, see LICENSE) from the npm package three@0.186.1, the same tarball as ../../three/0.186.1
+  https://registry.npmjs.org/three/-/three-0.186.1.tgz
+  integrity sha512-blFeqb49wRCSGUGj7gtpfnSGHy2lwDk94RhUmS1c/hTby70kvChbWpkJ4Pm1390LqzzvTmzgXKHPEafJwCb8jA==
+  tarball sha256 8cd068708ea44f2c73c944b1cead2ba2f0d5c15c8fc194e5700f4e4f4a033fe7
+Fetched 2026-10-22 (0.7 RT.1, session realtime). Import map: "three/webgpu" → three.webgpu.js, "three/tsl" → three.tsl.js
+(the addons import both bare, and 'three' for two files).
+Files (unmodified copies from the package):
+  three.webgpu.js, three.tsl.js                build/
+  addons/<path>                                examples/jsm/<path>  (only what the real-time view loads)
+Not from the package:
+  three.core.js — one export line, CadCraft's (Apache-2.0): re-exports ../../three/0.186.1/three.core.js so there is one
+  core per page. The package's build/three.core.js has sha256
+  9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6, the same bytes as ../../three/0.186.1/three.core.js.
+  Upgrade both folders together (tools/rt/test checks the versions match).
+sha256:
+  3a86e523921a69159c2a5b6aa0269527d7b99875ceea9a2a6b71ac8e0fbdd408  addons/csm/CSMFrustum.js
+  fe57b5b938b218a04fd815ae2a7f23b9fa9b2acef232bf458b95c01e97a1d6a7  addons/csm/CSMShadowNode.js
+  a09851a1fdccb83454b48c65784f9bfdbe79499a6803c99cc802d8cabf013ba1  addons/lighting/ClusteredLighting.js
+  527bfe01596762fab304ac11fa6b6b8fee501c448c28bdd74f001ecb903e2eac  addons/lighting/LightProbeGrid.js
+  11786b3ba83b0cc2d1e3e569ff40e7ba2e6709016da195d3813411eee3f2fc1d  addons/lighting/LightProbeGridUtils.js
+  f28a279656a37cf44bc09e45fd2de5df93a17cffad77f6da0a5bcd979cfd6525  addons/tsl/display/BloomNode.js
+  775f4e5b3c9427739b48bea1634045c869bec6e525d572db70f99aab42d1c544  addons/tsl/display/FXAANode.js
+  0b9caf7f92cc8ad38a796b3060a9e975da43722dffb5e5dfe7709eef9104aa4b  addons/tsl/display/GTAONode.js
+  a938b9efb1432628871515c030a069d91694e708c1b6ad2ebaa691aecdbd16ef  addons/tsl/display/ImportanceSampledEnvironment.js
+  f2332c4acefd0e64ec37aa2817e6bdface092d9edb9e9afa2f85f7e74e1f21f3  addons/tsl/display/Lut3DNode.js
+  8c326d1c7ce2526cc49e341b6abe49463524dff2c04d3be7dbdb0f8145052153  addons/tsl/display/SSRNode.js
+  90ba46d5ad3ea4eac467d7c7c6f8b01dcf0892185cdc0324d2eea778fde648be  addons/tsl/display/TRAANode.js
+  fa6f4ce3c9b1205fa3cc8a9da7783e57405402b6aa62a4bd984a8b0ac5ded115  addons/tsl/display/boxBlur.js
+  b1fb1034d84a3c3a6a68e416a58b3fb16817d8e9f903e67d4d1b9f72e8ae2d80  addons/tsl/lighting/ClusteredLightsNode.js
+  7e5cb2d05f1129232e94fd04b406af215b821a2563f1765738bc7ae680651494  addons/tsl/lighting/LightProbeGridNode.js
+  a235650eba39528ff10f987c497552c65a3affc4633591f34aae24b4ae98a20b  addons/tsl/utils/RNoise.js
+  cce8b1cffde0b7f7966a062d0d05b97318ce180f411c76fe3e25ebbef49e4220  addons/tsl/utils/SpecularHelpers.js
+  eb744737027b4e1bc1ddb3168733051d93e12c7ab85c1b365e1726c345fc134d  addons/tsl/utils/TAAUtils.js
+  6466bdad1724d84b60be24918e57b9def230a4e465c21b6b9f42db75db45daa6  three.core.js
+  6e6b92d8ce467818944f73815a96abadc6392fb34de577d479a23810b6aeeed0  three.tsl.js
+  15cfce5c653541704fd9a3463c39d3e8b854bb6265ccd854d7cfe74090625cc6  three.webgpu.js

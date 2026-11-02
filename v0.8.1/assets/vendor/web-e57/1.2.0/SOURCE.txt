@@ -1,0 +1,24 @@
+web-e57 1.2.0 (Apache-2.0, npm https://www.npmjs.com/package/web-e57, published 2024-05-04 by Prolincur Technologies),
+from the npm tarball https://registry.npmjs.org/web-e57/-/web-e57-1.2.0.tgz
+(sha256 31a2044b733e5896e385af422bca88478dee43a590b5a7ff0fd1cdeed964c835), copied 2026-10-16 by session `pointcloud`
+(0.6 PF.1).
+
+Files, unchanged from the package:
+  e57_bg.wasm   sha256 5975cbd5879bdacad519a17e8f1de36e22b546b6701cd7aec437b874e3541a7e
+  e57_bg.js     sha256 d813430c85a85965b0abeeaf485854307ff7ecbc427277a068bc45b366728685  (wasm-bindgen glue)
+  package.json
+Left out: e57.js (it imports the .wasm as an ES module, which browsers do not do: our e57-worker.js instantiates
+e57_bg.wasm itself and hands its exports to e57_bg.js's __wbg_set_wasm), e57.d.ts, README.md.
+LICENSE = the Apache License 2.0 text (the package names Apache-2.0 and ships no license file) + the licenses of the Rust
+crates compiled into the .wasm.
+
+What it is built from (read from the .wasm's own panic paths, 2026-10-16): the Rust `e57` crate 0.10.5 (MIT,
+https://github.com/cry-inc/e57), roxmltree 0.19.0, serde_json 1.0.115, base64 0.22.0, built with wasm-bindgen.
+**Source of the wrapper: not available.** The package names https://github.com/prolincur/web-e57 as its repository; on
+2026-10-16 GitHub answers "Repository not found", and no copy of the wrapper's source was found. So this .wasm can be
+used and redistributed under its license, but it cannot be rebuilt here. The crate it wraps is public (0.11.13 now).
+
+API used: convertE57(bytes, 'XML') → the file's XML section (scans, poses, fields, images), and
+convertE57(bytes, 'XYZ') → every scan's points as text lines "x y z [r g b]", poses applied (checked against pye57).
+Used by BimCraft and CadCraft (pointcloud.js → e57.js readE57 → e57-worker.js), loaded only when an .e57 file is opened.
+Replace with the 0.7 Rust crate (docs/0.7-PART1.md, cc-e57-rs over the `e57` crate) behind the same readE57 call.
