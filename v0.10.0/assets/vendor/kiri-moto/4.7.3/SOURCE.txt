@@ -1,0 +1,6 @@
+Kiri:Moto 4.7.3 — https://github.com/GridSpace/grid-apps (tag 4.7.3, commit ff7692241c48c3495da0bb8eb7455f906f3abb2d)
+License: MIT (LICENSE in this folder; package.json says MIT, the README says free for use without restriction).
+Note: most source files also carry "Copyright Stewart Allen -- All Rights Reserved" at the top. Owner's question for legal: docs/0.9-PRINT-STAGE.md.
+Built from source with its own bin/esbuild.config.mjs prod; pack/ holds only the engine, worker and pool bundles; wasm/ is theirs unchanged.
+One change: the bundles asked for "/wasm/kiri-*.wasm" at the site root; here new URL("../wasm/…", import.meta.url).
+Copy with: node tools/printstage/vendor-kiri.mjs <checkout> 4.7.3 ff7692241c48c3495da0bb8eb7455f906f3abb2d

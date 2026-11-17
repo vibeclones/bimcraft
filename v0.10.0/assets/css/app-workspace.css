@@ -1,0 +1,808 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* app-workspace.css — the workspace layout engine's building blocks (assets/js/app-workspace.js; 0.7 WS.6; map docs/apps/app-workspace.md).
+   From BimCraft's two layouts (Doc's docked ribbon, drsurfbum/bimcraft-SDH F28, and the toolbox and info box), keyed on the engine's own
+   classes, never on an app's markup: body.ws-on + ws-b-<block> for each block in the layout, ws-look-<outline>, ws-tabs-<style>, ws-dense;
+   the app's <main> = .ws-host, its drawing area = .ws-stage, regions .ws-<place>, the drawing's own parts .ws-fill / .ws-flow.
+   Our tokens only (Paper and Model follow), rem sizes (hairlines px), no shadows, motion only with prefers-reduced-motion: no-preference. */
+
+/* ---- the scope: the page with a layout on, a panels window holding the palettes, the ribbon's and the toolbox's own windows ---- */
+:is(body.ws-on, :where(.shell-pw:has(.ws-palettes)), .ws-ribbon-window, .ws-popout) {
+  --ws-ink: var(--ink); --ws-line: var(--line); --ws-chrome: var(--sheet-2); --ws-panel-bg: var(--sheet); --ws-blue: var(--layer, var(--action));
+  --ws-soft: color-mix(in srgb, var(--ws-blue) 14%, var(--sheet)); --ws-hover: color-mix(in srgb, var(--ws-blue) 55%, var(--sheet)); --ws-muted: var(--ink-2);
+}
+.ws-hide { display: none !important; }
+body.ws-chrome-on { height: 100dvh !important; min-height: 0 !important; overflow: hidden !important; }
+body:is(.ws-b-titlebar, .ws-b-menubar) > .app-bar { display: none; }
+body:is(.ws-b-titlebar, .ws-b-menubar) .ws-host { background: var(--ws-chrome); }
+:is(.ws-top, .ws-bottom, .ws-palettes, .ws-region, .ws-ribbon-box) { color: var(--ws-ink); font: 0.75rem var(--font); }
+:is(.ws-top, .ws-bottom, .ws-palettes, .ws-region, .ws-ribbon-box, .ws-empty-view) [hidden], .ws-dialog [hidden] { display: none !important; }
+:is(.ws-top, .ws-bottom, .ws-palettes, .ws-ribbon-box, .ws-drawing-tabs, .ws-view-controls, .ws-empty-view) button, .ws-dialog button {
+  font: inherit; color: inherit; background: transparent; border: 1px solid transparent; border-radius: 1px; cursor: pointer; padding: 0.1875rem 0.375rem; line-height: 1rem;
+}
+:is(.ws-top, .ws-bottom, .ws-palettes, .ws-ribbon-box, .ws-drawing-tabs, .ws-view-controls, .ws-empty-view) button:hover, .ws-dialog button:hover { border-color: var(--ws-hover); background: var(--ws-soft); }
+:is(.ws-top, .ws-bottom, .ws-palettes, .ws-region, .ws-ribbon-box, .ws-dialog) :is(button, select, input, [tabindex]):focus-visible { outline: 2px solid var(--action); outline-offset: -2px; }
+:is(.ws-top, .ws-bottom, .ws-palettes, .ws-ribbon-box, .ws-drawing-tabs, .ws-view-controls, .ws-empty-view, .ws-options) [aria-disabled="true"] { color: var(--ws-muted); }
+:is(.ws-top, .ws-bottom, .ws-palettes, .ws-ribbon-box, .ws-drawing-tabs, .ws-view-controls, .ws-empty-view, .ws-options) [aria-disabled="true"] :is(.ws-icon, .ws-icon-bi) { opacity: .7; }
+:is(.ws-top, .ws-bottom, .ws-palettes, .ws-ribbon-box, .ws-drawing-tabs, .ws-view-controls, .ws-options) select { font: 0.6875rem var(--font); border: 1px solid var(--ws-line); border-radius: 0; padding: 2px 0.1875rem; background: var(--ws-panel-bg); color: var(--ws-ink); min-width: 4.0625rem; max-width: 100%; }
+.ws-icon { display: block; width: 1.4375rem; height: 1.4375rem; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.ws-icon-bi { display: block; font-size: 1.375rem; line-height: 1; color: var(--ws-blue); }
+
+/* ---- around <main>: the top and bottom stacks ---- */
+.ws-top { position: relative; display: flex; flex-direction: column; flex-shrink: 0; background: var(--ws-chrome); }
+.ws-bottom { display: flex; flex-direction: column; flex-shrink: 0; background: var(--ws-chrome); }
+.ws-top > *, .ws-bottom > * { display: flex; min-width: 0; min-height: 0; }
+
+/* ---- in the drawing area: regions placed by the heights and widths the engine measures (--ws-st, --ws-sb, --ws-vt, --ws-vb, --ws-sl, --ws-sr) ---- */
+.ws-stage { position: relative; }
+.ws-region { position: absolute; z-index: 3; display: flex; flex-direction: column; min-width: 0; }
+.ws-stage-top { top: 0; left: 0; right: 0; }
+.ws-stage-bottom { bottom: 0; left: 0; right: 0; }
+.ws-stage-left { left: 0; top: var(--ws-st, 0px); bottom: var(--ws-sb, 0px); overflow-y: auto; overflow-x: hidden; }
+.ws-stage-right { right: 0; top: var(--ws-st, 0px); bottom: var(--ws-sb, 0px); overflow-y: auto; overflow-x: hidden; }
+.ws-region.ws-out { display: none; }
+.ws-view-top { top: var(--ws-st, 0px); left: var(--ws-sl, 0px); right: var(--ws-sr, 0px); }
+.ws-view-bottom { bottom: var(--ws-sb, 0px); left: var(--ws-sl, 0px); right: var(--ws-sr, 0px); }
+/* the bars across the drawing area lie over the side columns: a menu the app's toolbar opens from stage-top (or up from stage-bottom)
+   covers the toolbox column and takes its own clicks; a region holding an open menu lies over every other region */
+.ws-stage-top { z-index: 5; }
+.ws-stage-bottom { z-index: 4; }
+.ws-region:has(details[open]:not(.tbx-group), [aria-haspopup][aria-expanded="true"]) { z-index: 6; }   /* the toolbox's own groups are <details> too */
+.ws-stage > .ws-fill { position: absolute !important; top: calc(var(--ws-st, 0px) + var(--ws-vt, 0px)) !important; bottom: calc(var(--ws-sb, 0px) + var(--ws-vb, 0px)) !important; left: var(--ws-sl, 0px) !important; right: var(--ws-sr, 0px) !important; }
+/* a replaced element (a canvas, an image, a frame) keeps its own size under the four sides: it is sized from the same measures, so the
+   bars never cover its edges and Zoom extents and picks land where they look */
+.ws-stage > .ws-fill:is(canvas, video, img, iframe, object, embed, svg) {
+  box-sizing: border-box !important; width: calc(100% - var(--ws-sl, 0px) - var(--ws-sr, 0px)) !important;
+  height: calc(100% - var(--ws-st, 0px) - var(--ws-vt, 0px) - var(--ws-sb, 0px) - var(--ws-vb, 0px)) !important;
+}
+.ws-stage > .ws-flow { margin-top: calc(var(--ws-st, 0px) + var(--ws-vt, 0px)); margin-left: var(--ws-sl, 0px); margin-right: var(--ws-sr, 0px); margin-bottom: calc(var(--ws-sb, 0px) + var(--ws-vb, 0px)); }
+.ws-no-view > .ws-fill:not(.ws-empty-view) { visibility: hidden !important; }
+body.ws-b-titlebar .ws-stage { height: auto; min-height: 0; min-width: 0; border: 0; background: var(--sheet); }
+
+/* ---- titlebar ---- */
+.ws-titlebar { align-items: center; gap: 0.5rem; padding: 0 0.5rem; min-height: 2rem; background: color-mix(in srgb, var(--ws-chrome) 85%, var(--ws-muted)); border-bottom: 1px solid var(--ws-line); white-space: nowrap; }
+.ws-brand { font-size: 0.875rem; font-weight: 700; font-stretch: 112%; color: var(--ws-ink); display: flex; align-items: center; gap: 0.45rem; }
+.ws-brand a { display: inline-flex; color: var(--ws-ink); } .ws-brand .layer-swatch { flex-shrink: 0; }
+.ws-quick { display: flex; gap: 1px; border-right: 1px solid var(--ws-line); padding-right: 0.5rem; }
+.ws-quick .ws-tool { width: 1.5625rem; min-width: 1.5625rem; max-width: 1.5625rem; height: 1.5625rem; display: grid; place-items: center; padding: 2px; }
+.ws-quick .ws-tool.ws-compact { min-width: 1.5625rem; max-width: 1.5625rem; width: 1.5625rem; display: grid; place-items: center; padding: 2px; }
+.ws-quick .ws-tool span { display: none; } .ws-quick :is(.ws-icon, .ws-icon-bi) { width: 1.0625rem; height: 1.0625rem; font-size: 1rem; margin: 0; }
+.ws-quick .ws-tool, .ws-quick .ws-tool.ws-compact { justify-content: center; align-content: center; }   /* the 1.0625rem icon track sat at the start of the 19px content box, 1px left of the middle */
+.ws-quick .ws-icon-bi { display: grid; place-items: center; text-align: center; }   /* the glyph in the middle of its square: no 1px margin under it, no baseline offset */
+.ws-quick .ws-icon-bi::before { display: block; line-height: 1; vertical-align: 0; }
+.ws-project { flex: 1; min-width: 3.125rem; text-align: center; text-overflow: ellipsis; overflow: hidden; }
+.ws-titlebar > button { font-size: 0.6875rem; flex-shrink: 0; }
+.ws-shell-btn { font-size: 1rem !important; padding: .125rem .375rem !important; }
+
+/* ---- ribbon ---- */
+.ws-ribbon-tabs { align-items: stretch; background: var(--ws-chrome); border-bottom: 1px solid var(--ws-line); overflow-x: auto; scrollbar-width: thin; white-space: nowrap; }
+.ws-ribbon-tabs button { padding: 0.25rem 0.6875rem; flex-shrink: 0; border-bottom: 0; }
+.ws-ribbon-tabs .ws-file-tab { padding-inline: 1.0625rem; }
+.ws-ribbon-tabs .ws-context-tab { background: color-mix(in srgb, var(--layer-green) 16%, var(--sheet)); color: var(--ink); }
+/* the open tab is the lit one (look.tabs "filled") or underlined ("underline"); File looks like the other tabs (owner 2026-10-24) */
+.ws-tabs-filled .ws-ribbon-tabs button[aria-selected="true"], .ws-ribbon-window.ws-tabs-filled .ws-ribbon-tabs button[aria-selected="true"] { background: var(--ws-blue); color: var(--sheet); border: 1px solid var(--ws-blue); border-bottom: 0; }
+.ws-tabs-underline .ws-ribbon-tabs button[aria-selected="true"] { background: var(--ws-panel-bg); border-bottom: 2px solid var(--ws-blue); font-weight: 600; }
+.ws-ribbon-tabs .ws-tear { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; }
+.ws-ribbon { overflow-x: auto; overflow-y: hidden; background: var(--ws-panel-bg); padding: 0.1875rem 0.3125rem 0; scrollbar-width: thin; }
+/* a group is its tools above its name; the name is in the flow, so a group is never narrower than its name (owner 2026-10-24) */
+.ws-group { display: flex; flex-direction: column; align-items: center; border-right: 1px solid var(--ws-line); flex-shrink: 0; padding: 0 0.3125rem; height: 6.0625rem; }
+.ws-group-tools { flex: 1 1 auto; display: flex; align-items: flex-start; gap: .1875rem; min-height: 0; }
+.ws-group-title { flex: 0 0 auto; align-self: stretch; padding-inline: .125rem; text-align: center; font-size: 0.6875rem; line-height: 1.0625rem; color: var(--ws-muted); white-space: nowrap; }
+.ws-tool { position: relative; min-width: 2.6875rem; max-width: 7rem; height: auto; min-height: 0; padding: 0.25rem 0.3125rem; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 0.1875rem; text-align: center; line-height: 0.9375rem; white-space: normal; font-size: 0.6875rem; }
+.ws-tool .ws-icon { width: 1.9375rem; height: 2rem; color: var(--ws-blue); stroke-width: 1.3; margin-bottom: 1px; }
+.ws-stack { display: flex; flex-direction: column; gap: .125rem; }
+:is(.ws-stack .ws-tool, .ws-tool.ws-compact) { height: 1.5625rem; min-width: 5.1875rem; max-width: none; flex-direction: row; gap: 0.3125rem; justify-content: flex-start; padding: 2px 0.25rem; white-space: nowrap; text-align: left; }
+:is(.ws-stack .ws-tool, .ws-tool.ws-compact) .ws-icon { width: 1.125rem; height: 1.125rem; margin: 0; stroke-width: 1.4; }
+:is(.ws-stack .ws-tool, .ws-tool.ws-compact) .ws-icon-bi { font-size: 1rem; }
+.ws-notbuilt :is(.ws-icon, .ws-icon-bi) { opacity: .45; }
+/* the toolbar style (Settings › Global › Toolbar) applies to the ribbon too: icons only compacts it (two rows of small icons per group,
+   the name in the tooltip), labels only hides the icons; "Show group names" off hides the group titles */
+body[data-shell-tb="icons"] .ws-ribbon .ws-tool > span { display: none; }
+body.shell-tb-nogroups .ws-ribbon .ws-group-title { display: none; }
+body[data-shell-tb="labels"] .ws-ribbon .ws-tool > :is(.ws-icon, .ws-icon-bi) { display: none; }
+body[data-shell-tb="labels"] .ws-ribbon .ws-tool { min-height: 0; height: auto; min-width: 0; max-width: none; padding: .1875rem .5rem; flex-direction: row; justify-content: center; align-items: center; }   /* no icon, no icon space: the frame is its label's size, not the 4.7rem a big icon needs */
+body[data-shell-tb="labels"] .ws-ribbon :is(.ws-group, .ws-group-tools) { height: auto; }
+body[data-shell-tb="labels"] .ws-ribbon .ws-group-tools { align-items: flex-start; }
+body[data-shell-tb="labels"] .ws-ribbon .ws-stack .ws-tool { height: auto; min-height: 1.5625rem; justify-content: flex-start; }
+body[data-shell-tb="icons"] .ws-ribbon .ws-group { height: auto; padding: .125rem .3125rem 0; }
+body[data-shell-tb="icons"] .ws-ribbon .ws-group-tools { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 1.5rem); grid-auto-columns: 1.5rem; align-content: start; gap: .125rem; }
+body[data-shell-tb="icons"].shell-tb-nogroups .ws-ribbon .ws-group { padding-bottom: .1875rem; }
+body[data-shell-tb="icons"] .ws-ribbon .ws-stack { display: contents; }
+body[data-shell-tb="icons"] .ws-ribbon .ws-tool { width: 1.5rem; min-width: 0; max-width: none; height: 1.5rem !important; padding: 0; display: grid; place-items: center; }
+body[data-shell-tb="icons"] .ws-ribbon { padding-top: .125rem; }
+body[data-shell-tb="icons"] .ws-ribbon .ws-tool :is(.ws-icon, .ws-icon-bi) { width: 1.125rem; height: 1.125rem; font-size: 1rem; margin: 0; }
+body[data-shell-tb="icons"] .ws-ribbon .ws-group-title { font-size: .5625rem; line-height: .75rem; }
+/* collapsed to its tabs; a tab click shows its tools over the drawing (.ws-peek) until a tool runs or a click lands elsewhere */
+.ws-collapsed > .ws-ribbon { display: none !important; }
+.ws-collapsed.ws-peek > .ws-ribbon { display: flex !important; position: absolute; left: 0; right: 0; top: var(--ws-peek-top, 3.75rem); z-index: 40; border-bottom: 1px solid var(--ws-line); }
+/* the ribbon's own window */
+.ws-ribbon-window { display: block !important; height: 100dvh; overflow: hidden; background: var(--ws-chrome); margin: 0; }
+.ws-ribbon-window .ws-ribbon-box { display: flex; flex-direction: column; height: 100%; }
+.ws-ribbon-window .ws-ribbon-tabs { display: flex; } .ws-ribbon-window .ws-ribbon { flex: 1 1 auto; display: flex; }
+/* bars hidden: the top slides away with the app's bars and comes back with the shell's reveal */
+body.shell-autohide.ws-chrome-on .ws-top { position: fixed; top: 0; left: 0; right: 0; z-index: 60; transform: translateY(-100%); }
+body.shell-autohide.shell-reveal.ws-chrome-on .ws-top { transform: none; }
+@media (prefers-reduced-motion: no-preference) { body.shell-autohide.ws-chrome-on .ws-top { transition: transform .18s ease; } }
+
+/* ---- look: button outlines (look.outline) for ribbon and toolbox tools; other buttons keep a hairline box ---- */
+:is(.ws-quick .ws-tool, .ws-titlebar > button, .ws-options > button, .ws-options .ws-tool, .ws-view-controls button, .ws-palette-heading button, .ws-empty-view button, .ws-ribbon-tabs .ws-tear) { border: 1px solid var(--line); background: var(--sheet); border-radius: var(--radius, 2px); }
+:is(.ws-quick .ws-tool, .ws-titlebar > button, .ws-options > button, .ws-view-controls button, .ws-palette-heading button):hover { border-color: var(--ws-hover); background: var(--ws-soft); }
+:is(.ws-ribbon .ws-tool, .tbx-tool) { border: 1px solid var(--line); background: var(--sheet); border-radius: var(--radius, 2px); }
+:is(.ws-look-faint, .ws-ribbon-window.ws-look-faint) :is(.ws-ribbon .ws-tool, .tbx-tool) { border-color: color-mix(in srgb, var(--line) 32%, transparent); }
+:is(.ws-look-none, .ws-ribbon-window.ws-look-none) :is(.ws-ribbon .ws-tool, .tbx-tool) { border-color: transparent; background: transparent; }
+:is(.ws-ribbon .ws-tool, .tbx-tool):hover { border-color: var(--ws-hover); }
+.ws-ribbon .ws-tool.ws-notbuilt { border-style: dashed; }
+/* the running tool or an on/off command (pressed()) is lit in every block, as in the toolbox */
+:is(.ws-top, .ws-bottom, .ws-region, .ws-ribbon-box, .ws-palettes, .tbx-popout) :is(.ws-tool, .tbx-tool)[aria-pressed="true"] { background: color-mix(in srgb, var(--layer, var(--action)) 16%, var(--sheet)); border-color: var(--layer, var(--action)); }
+.ws-dense .ws-group { height: 5.125rem; } .ws-dense .ws-tool { height: 3.75rem; } .ws-dense :is(.ws-stack .ws-tool, .ws-tool.ws-compact) { height: 1.25rem; }
+.ws-dense .tbx-tool { min-height: 1.625rem; padding-block: .125rem; }
+
+/* ---- options bar ---- */
+.ws-options { align-items: center; gap: 0.75rem; padding: 0.1875rem 0.625rem; background: var(--ws-chrome); border-block: 1px solid var(--ws-line); white-space: nowrap; overflow: auto; scrollbar-width: thin; }
+.ws-options strong { font-size: 0.75rem; font-weight: 500; } .ws-options > span { flex: 1; color: var(--ws-muted); overflow: hidden; text-overflow: ellipsis; min-width: 5rem; }
+.ws-tool-options { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; min-width: 0; }
+.ws-tool-options:empty { display: none; }
+.ws-tool-options label { display: inline-flex; align-items: center; gap: .25rem; margin: 0; }
+.ws-has-tool-options > [data-ws-options-text] { flex: 0 0 auto; min-width: 0; }
+
+/* ---- the app's own toolbar as a strip (place stage-top / stage-bottom); with the bars hidden it is one of the shell's bars
+   (app-shell.js bars(): .shell-bar, fixed, slides away with the app bar) ---- */
+.ws-region > .ws-toolbar-strip:not(.shell-bar) { position: static !important; inset: auto !important; width: auto !important; max-width: none !important; border-radius: 0 !important; border-width: 0 0 var(--pen-1) !important; transform: none !important; }
+
+/* ---- palettes: the content of an app panel (its grip stays: drag, dock, float, "Move to a new window") ---- */
+.ws-panel-host { display: flex !important; flex-direction: column; overflow: hidden !important; padding: 0 !important; }
+.ws-panel-host > .ws-palettes, .ws-palettes { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: minmax(6.25rem, var(--ws-props, 50%)) 0.3125rem minmax(6.25rem, 1fr); background: var(--ws-panel-bg); overflow: hidden; }
+.ws-palettes.ws-one { grid-template-rows: minmax(0, 1fr); }
+.ws-palette { min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.ws-palette-heading { display: flex; align-items: center; justify-content: space-between; min-height: 1.625rem; padding: 0 0.4375rem; background: var(--ws-chrome); font-size: 0.75rem; font-weight: 600; border-bottom: 1px solid var(--ws-line); flex-shrink: 0; }
+.ws-palette-heading button { font-size: 0.625rem; padding: 1px 0.1875rem; font-weight: 400; }
+.ws-palette-scroll { overflow: auto; overscroll-behavior: contain; min-height: 0; flex: 1; scrollbar-width: thin; }
+.ws-hsplit { background: var(--ws-line); cursor: row-resize; touch-action: none; }
+.ws-hsplit:hover, .ws-hsplit[data-dragging="true"] { background: var(--ws-hover) !important; }
+.ws-lower-tabs { display: flex; gap: .125rem; }
+.ws-lower-tabs [aria-selected="true"] { font-weight: 600; border-bottom: 2px solid var(--ws-blue); }
+.ws-browser-hint { font-size: 0.625rem; line-height: 0.875rem; color: var(--ws-muted); margin: 0; padding: 0.25rem 0.4375rem; border-bottom: 1px solid var(--ws-line); }
+.ws-model-slot { zoom: .85; }   /* the panel's own content at the palettes' text size (rem layouts kept in proportion) */
+/* the app's panels dressed like the palettes while a layout with palettes is on; in classic and in a panels window they keep their own look */
+body.ws-b-palettes main > aside { border-color: var(--ws-line); border-width: 0; background: var(--ws-panel-bg); }
+body.ws-b-palettes main > aside[class$="-left"], body.ws-b-palettes main > aside[class*="-left "] { border-right-width: 1px; }
+body.ws-b-palettes main > aside[class$="-right"], body.ws-b-palettes main > aside[class*="-right "] { border-left-width: 1px; }
+body.ws-b-palettes main > aside > .shell-grip { min-height: 1.625rem; font-size: .75rem; color: var(--ws-ink); background: var(--ws-chrome); border-bottom: 1px solid var(--ws-line); }
+body.ws-b-palettes main > .shell-split::after { width: 1px; }
+body.ws-b-palettes main > .shell-split:hover::after, body.ws-b-palettes.shell-resizing main > .shell-split::after { width: 3px; }
+
+/* ---- view tabs: 'open' (a tab per opened view, closable) and 'all' (a tab for every view) ---- */
+.ws-drawing-tabs { display: flex; align-items: stretch; height: 1.8125rem; overflow-x: auto; scrollbar-width: thin; background: var(--ws-chrome); border-bottom: 1px solid var(--ws-line); font: 0.75rem var(--font); }
+.ws-drawing-tab { display: flex; white-space: nowrap; border-right: 1px solid var(--ws-line); flex-shrink: 0; }
+.ws-drawing-tab [aria-selected="true"] { background: var(--ws-panel-bg); border-bottom: 2px solid var(--ws-blue); font-weight: 600; }
+.ws-drawing-tab button { padding: 0.1875rem 0.5rem; } .ws-drawing-tab button + button { font-size: 1rem; padding-inline: 0.3125rem; }
+.ws-drawing-tab .bi { color: var(--ws-blue); }
+.tbx-tabs { display: flex; overflow-x: auto; background: var(--sheet-2); border-bottom: var(--pen-1) solid var(--line); }
+.tbx-tab { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .85rem; font: inherit; font-size: .8125rem; color: var(--ink-2); white-space: nowrap; background: transparent; border: 0; border-right: var(--pen-1) solid var(--line); border-bottom: var(--pen-2) solid transparent; cursor: pointer; }
+.tbx-tab .bi { color: var(--layer, var(--action)); }
+.tbx-tab[aria-selected="true"] { color: var(--ink); font-weight: 600; background: var(--sheet); border-bottom-color: var(--layer, var(--action)); }
+.tbx-tab:focus-visible { outline: var(--pen-2) solid var(--action); outline-offset: -2px; }
+.ws-empty-view { z-index: 2; display: flex; align-items: center; justify-content: center; flex-direction: column; background: var(--sheet); color: var(--ink); text-align: center; padding: 1.25rem; gap: 0.625rem; font: 0.75rem var(--font); }
+.ws-empty-view p { margin: 0; }
+.ws-empty-view[hidden] { display: none !important; }
+/* the app shows a file that is not one of its views (a drawing, a card, a report): the view blocks step aside */
+.ws-other :is(.ws-drawing-tabs, .ws-view-controls, .ws-empty-view, .tbx-tabs) { display: none !important; }
+
+/* ---- view bar, quick bar, status bar ---- */
+.ws-view-controls { display: flex; align-items: center; gap: 0.5rem; height: 1.875rem; padding: 0 0.4375rem; background: var(--ws-chrome); border-top: 1px solid var(--ws-line); overflow-x: auto; scrollbar-width: thin; white-space: nowrap; font: 0.75rem var(--font); }
+.ws-view-controls label { display: flex; align-items: center; gap: 0.3125rem; font-size: 0.6875rem; }
+.ws-view-controls .ws-tool.ws-compact { min-width: fit-content; max-width: none; flex-shrink: 0; }
+.ws-drawing-title { font-size: 0.6875rem; max-width: 8.75rem; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.tbx-quick { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: .3rem .6rem; background: var(--sheet-2); border-top: var(--pen-1) solid var(--line); font-size: var(--fs-sm); }
+.ws-statusbar { align-items: center; gap: 1rem; padding: 0 0.5rem; min-height: 1.5rem; border-top: 1px solid var(--ws-line); font-size: 0.6875rem; white-space: nowrap; overflow: hidden; }
+.ws-layout-label { color: var(--ws-muted); flex-shrink: 0; } .ws-status-slot { flex: 1; overflow: hidden; min-width: 0; }
+.ws-status-slot > * { position: static !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; background: transparent !important; border: 0 !important; color: inherit; font-size: 0.6875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- info box ---- */
+.tbx-info { display: flex; flex-wrap: wrap; align-items: stretch; background: var(--sheet-2); border-bottom: var(--pen-1) solid var(--line); font-size: var(--fs-sm); }
+.tbx-ig { display: flex; flex-direction: column; gap: .15rem; padding: .3rem .7rem .4rem; border-right: var(--pen-1) solid var(--line); min-width: 0; }
+.tbx-ig-tool { flex: 1 1 22rem; min-width: 0; }
+.tbx-ig-title { font-size: .6875rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.tbx-ig-body { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; min-height: 1.9rem; }
+.tbx-ig-body label { display: inline-flex; align-items: center; gap: .3rem; margin: 0; }
+/* the selection note is one line, cut with an ellipsis (Settings' tooltip shows the whole text): it never wraps, so the info box keeps
+   its height on every pick and the drawing under it does not jump (contain: its width never pushes the box wider either) */
+.tbx-sel { color: var(--ink-2); flex: 1 1 auto; min-width: 0; contain: inline-size; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-props-btn { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .45rem; font: inherit; color: var(--ink); background: var(--sheet); border: var(--pen-1) solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.ws-props-btn:hover { border-color: var(--layer, var(--action)); }
+
+/* ---- toolbox ---- */
+.tbx-toolbox { display: flex; flex-direction: column; min-height: 100%; background: var(--sheet-2); border-right: var(--pen-1) solid var(--line); }
+.ws-stage-right .tbx-toolbox { border-right: 0; border-left: var(--pen-1) solid var(--line); }
+.tbx-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding: .3rem .4rem .3rem .6rem; font-size: .75rem; font-weight: 600; border-bottom: var(--pen-1) solid var(--line); }
+.tbx-group > summary, .tbx-group-title { padding: .35rem .6rem .2rem; font-size: .6875rem; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+/* 2026-11-09: minmax(min-content, 1fr), not minmax(0, 1fr): the column is as wide as its longest tool name (tools never wrap), so no label is cut off ("Empty slot" was clipped in a column sized by the group names). */
+.tbx-tools { display: grid; grid-template-columns: minmax(min-content, 1fr); gap: .15rem; padding: .15rem .35rem .45rem; }
+.tbx-tool { display: flex; align-items: center; gap: .55rem; min-height: 2rem; padding: .25rem .55rem; font: inherit; font-size: .8125rem; color: var(--ink); text-align: left; white-space: nowrap; cursor: pointer; }
+.tbx-tool .bi { font-size: 1.05rem; color: var(--layer, var(--action)); }
+.tbx-tool .ws-icon { width: 1.25rem; height: 1.25rem; color: var(--layer, var(--action)); }
+.tbx-tool:hover { border-color: var(--layer, var(--action)); }
+.tbx-tool[aria-pressed="true"] { background: color-mix(in srgb, var(--layer, var(--action)) 16%, var(--sheet)); border-color: var(--layer, var(--action)); font-weight: 600; }
+.tbx-tool[aria-disabled="true"] { color: var(--ink-2); }
+.tbx-tool[aria-disabled="true"] :is(.bi, .ws-icon) { opacity: .6; }
+.tbx-tool:focus-visible { outline: var(--pen-2) solid var(--action); outline-offset: -2px; }
+body[data-shell-tb="icons"] .tbx-tools { grid-template-columns: repeat(2, 2rem); gap: .2rem; }
+body[data-shell-tb="icons"] .tbx-tool { width: 2rem; height: 2rem; min-height: 0; padding: 0; justify-content: center; }
+body[data-shell-tb="icons"] .tbx-tool > span, body[data-shell-tb="icons"] .tbx-head > span { display: none; }
+/* A group's More button (0.10): the tools an app keeps behind More open as a named list beside the column, in every toolbar-button setting. */
+.tbx-more { position: static; align-self: auto; }
+.tbx-more > summary.tbx-tool { list-style: none; height: auto; min-width: 0; font-size: .8125rem; color: var(--ink-2); display: flex; place-items: initial; }
+.tbx-more > summary.tbx-tool::-webkit-details-marker { display: none; }
+.tbx-more[open] > summary.tbx-tool { border-color: var(--layer, var(--action)); color: var(--ink); }
+.tr-more.tbx-more > summary.tbx-tool { opacity: 1; }   /* the tool rows fade a More with nothing to run; a toolbox group's More is always a way in */
+.tbx-more .tr-more-list { min-width: 13rem; gap: .15rem; }
+.tbx-more .tr-more-list .tbx-tool { width: auto; height: auto; min-height: 2rem; padding: .25rem .55rem; justify-content: flex-start; }
+body[data-shell-tb] .tbx-more .tr-more-list .tbx-tool > span { display: inline; }
+body[data-shell-tb="icons"] .tbx-more > summary.tbx-tool { width: 2rem; height: 2rem; padding: 0; justify-content: center; }
+/* 2026-11-09: icons only = a narrow column. A group name (and the Auto-focus lock beside it) used to keep the column ~115px wide; it now gives its width to the 2-icon grid and is cut with an ellipsis. */
+body[data-shell-tb="icons"] .tbx-group > summary { width: 0; min-width: 100%; box-sizing: border-box; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+body[data-shell-tb="labels"] .tbx-tool :is(.bi, .ws-icon) { display: none; }
+body.shell-tb-nogroups :is(.tbx-group > summary, .tbx-group-title) { display: none !important; }   /* !important: the shell's fold layout (app-shell.css, display: block) is more specific */
+.tbx-popout { margin: 0; height: 100dvh; overflow: hidden; background: var(--sheet-2); }
+.tbx-popout .ws-popout-box { height: 100%; }
+.tbx-popout .tbx-toolbox { height: 100%; overflow-y: auto; }
+
+/* ---- My tools (toolbox option mine, WS.21): empty slots a person fills ---- */
+.tbx-tool.tbx-empty { color: var(--ink-2); border-style: dashed; background: transparent; }
+.tbx-tool.tbx-empty .bi { color: var(--ink-2); }
+.tbx-tool.tbx-empty:hover { color: var(--ink); }
+.tbx-mine { padding-bottom: .55rem; border-bottom: var(--pen-1) solid var(--line); }
+.ws-ctx-menu { position: fixed; z-index: 100001; display: flex; flex-direction: column; min-width: 14rem; padding: .3rem; background: var(--sheet); color: var(--ink); border: var(--pen-1) solid var(--line); font: .9375rem var(--font); }
+.ws-ctx-menu button { text-align: left; min-height: 2.25rem; padding: .4rem .75rem; font: inherit; color: inherit; background: transparent; border: var(--pen-1) solid transparent; cursor: pointer; }
+.ws-ctx-menu button:is(:hover, :focus-visible) { border-color: var(--layer, var(--action)); background: color-mix(in srgb, var(--layer, var(--action)) 12%, var(--sheet)); outline: none; }
+.ws-dialog.ws-mine-pick { width: min(36rem, 94vw); }
+.ws-mine-pick input[type="search"] { width: 100%; padding: .5rem; margin-bottom: .5rem; }
+.ws-mine-list { display: grid; gap: .15rem; max-height: 55dvh; overflow-y: auto; }
+.ws-dialog .ws-mine-item { display: flex; align-items: center; gap: .6rem; width: 100%; margin: 0; text-align: left; }
+.ws-mine-item .bi { color: var(--layer, var(--action)); font-size: 1.05rem; }
+.ws-mine-item small { margin-left: auto; color: var(--ink-2); }
+
+/* ---- pet palette (block petpalette, place float, WS.22): by the pointer over the drawing, only while something is picked ---- */
+.ws-pet { position: absolute; z-index: 7; display: flex; gap: .15rem; padding: .2rem; background: var(--sheet); border: var(--pen-1) solid var(--line); }
+.ws-pet[hidden] { display: none; }
+.ws-pet-tool { display: grid; place-items: center; width: 2rem; height: 2rem; padding: 0; font: inherit; color: var(--ink); background: transparent; border: var(--pen-1) solid transparent; border-radius: var(--radius); cursor: pointer; }
+.ws-pet-tool .bi { font-size: 1.05rem; color: var(--layer, var(--action)); }
+.ws-pet-tool:hover { border-color: var(--layer, var(--action)); background: color-mix(in srgb, var(--layer, var(--action)) 12%, var(--sheet)); }
+.ws-pet-tool[aria-disabled="true"] .bi { opacity: .45; }
+.ws-pet-close { margin-left: .2rem; border-left: var(--pen-1) solid var(--line); border-radius: 0; }
+.ws-pet-close .bi { color: var(--ink-2); }
+
+/* ---- info box: the picked element's main fields (WS.20); one line, so the box keeps its height ---- */
+.tbx-ig-tool .tbx-ig-body { flex-wrap: nowrap; }
+.tbx-fields { display: flex; flex: 0 1 auto; min-width: 0; gap: .6rem; overflow: hidden; }
+.tbx-ig-body .tbx-field { flex: 0 0 auto; gap: .3rem; font-size: .75rem; color: var(--ink-2); white-space: nowrap; }
+.tbx-field > span { max-width: 8rem; overflow: hidden; text-overflow: ellipsis; }
+.tbx-field :is(input, select) { height: 1.6rem; font: .75rem var(--font); color: var(--ink); background: var(--sheet); border: var(--pen-1) solid var(--line); border-radius: 0; padding: 0 .3rem; }
+.tbx-field input:not([type="checkbox"]) { width: 5.5rem; }
+.tbx-field select { max-width: 10rem; }
+
+/* ---- Arrange your own layout (WS.25) ---- */
+.ws-dialog.ws-arrange { width: min(46rem, 94vw); }
+.ws-arr-form { display: grid; gap: .75rem; }
+.ws-arr-group { display: grid; gap: .45rem; margin: 0; padding: .6rem .75rem .75rem; border: var(--pen-1) solid var(--line); }
+.ws-arr-group legend { padding: 0 .3rem; font-weight: 600; font-size: .8125rem; }
+.ws-arr-field { display: grid; grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr); gap: .6rem; align-items: center; margin: 0; }
+.ws-arr-field > span { color: var(--ink-2); }
+.ws-arr-field :is(input[type="text"], select) { width: 100%; min-width: 0; padding: .3rem .45rem; font: inherit; color: var(--ink); background: var(--sheet); border: var(--pen-1) solid var(--line); border-radius: var(--radius); }
+.ws-arr-check { display: inline-flex; align-items: center; gap: .35rem; margin: 0; }
+.ws-arr-slots { display: flex; flex-wrap: wrap; gap: .3rem 1rem; padding-left: 1.4rem; }
+.ws-arr-hint { margin: 0; color: var(--ink-2); }
+.ws-arr-msg { margin: 0; color: var(--ink-2); min-height: 1.2rem; }
+.ws-dialog .ws-arr-primary { background: var(--action); color: var(--on-action); border-color: var(--action); }
+@media (max-width: 760px) { .ws-arr-field { grid-template-columns: minmax(0, 1fr); gap: .2rem; } }
+
+/* ---- tooltip and dialogs ---- */
+/* every engine dialog: a size that fits the job (owner 2026-10-24: "too tiny for the function") — body text at the app's reading size,
+   a real heading, buttons at least 2.25rem tall, actions in one row at the bottom right */
+.ws-dialog { font: 0.9375rem/1.55 var(--font); background: var(--sheet); color: var(--ink); border: 1px solid var(--line); padding: 1.5rem 1.75rem 1.25rem; width: min(32rem, 92vw); max-width: min(48rem, 94vw); max-height: 88dvh; overflow: auto; }
+.ws-dialog h2 { font-size: 1.25rem; font-weight: 700; margin: 0 0 0.875rem; }
+.ws-dialog p { margin: 0 0 0.75rem; }
+.ws-dialog button { min-height: 2.25rem; border: 1px solid var(--line); padding: 0.4rem 0.9rem; margin: 0; }
+.ws-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; }
+.ws-dialog input[type="search"], .ws-dialog input[type="text"] { font: inherit; min-height: 2.25rem; }
+.ws-dialog.ws-inventory { width: min(44rem, 94vw); }
+.ws-inventory .ws-inventory-list { max-height: 55dvh; overflow-y: auto; }
+
+/* the File tab's menu: a drop-down under the tab, rows a hand can hit */
+.ws-file-menu { position: fixed; z-index: 100001; display: flex; flex-direction: column; min-width: 24rem; max-width: min(28rem, 94vw); overflow-y: auto; padding: .35rem; background: var(--sheet); color: var(--ink); border: var(--pen-1) solid var(--line); font: .9375rem var(--font); }
+.ws-file-item { display: flex; align-items: center; gap: .75rem; min-height: 2.5rem; padding: .35rem .75rem; font: inherit; color: inherit; text-align: left; background: transparent; border: var(--pen-1) solid transparent; border-radius: var(--radius); cursor: pointer; }
+.ws-file-item .bi, .ws-file-item .ws-icon { font-size: 1.2rem; width: 1.35rem; height: 1.35rem; flex: 0 0 auto; color: var(--layer, var(--action)); }
+.ws-file-label { flex: 1 1 auto; }
+.ws-file-item kbd { font: .75rem var(--font); color: var(--ink-2); border: var(--pen-1) solid var(--line); border-radius: var(--radius); padding: .05rem .35rem; background: var(--sheet-2); }
+.ws-file-item:is(:hover, :focus-visible) { border-color: var(--layer, var(--action)); background: color-mix(in srgb, var(--layer, var(--action)) 10%, var(--sheet)); outline: none; }
+.ws-file-item[aria-disabled="true"] { color: var(--ink-2); }
+.ws-file-item[aria-disabled="true"] :is(.bi, .ws-icon) { opacity: .5; }
+.ws-file-sep { height: 0; margin: .3rem .5rem; border-top: var(--pen-1) solid var(--line); }
+.ws-dialog::backdrop { background: color-mix(in srgb, var(--ink) 40%, transparent); }
+.ws-inventory input { width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; } .ws-inventory article { padding: 0.5625rem 0; border-bottom: 1px solid var(--line); } .ws-inventory article p { margin: 0.25rem 0; }
+
+/* ---- narrow windows (phones keep the phone layout: the engine does not mount a layout there) ---- */
+@media (max-width: 1000px) { .ws-project { text-align: left; } .ws-titlebar > button { font-size: 0.625rem; } .ws-view-controls { gap: 0.375rem; } .ws-drawing-title { max-width: 5rem; } }
+.ws-region > :is(.ws-ribbon-tabs, .ws-ribbon, .ws-options, .ws-titlebar) { display: flex; }
+.ws-arrange .ws-arr-field select.select-cc { min-height: 0; height: auto; padding-block: .3rem; }
+
+/* ---- a panel in a window of its own (api.tearable(), WS.26): the grip on top, the panel filling the window ---- */
+.panel-popout { margin: 0; height: 100dvh; overflow: hidden; background: var(--ws-panel-bg, var(--sheet)); color: var(--ink); font: .8125rem var(--font); }
+.panel-popout .ws-popout-box { height: 100%; display: flex; flex-direction: column; min-height: 0; overflow: auto; }
+.panel-popout .ws-popout-box > .ws-palettes { flex: 1 1 auto; min-height: 0; }
+.panel-popout .ws-popout-box > aside { position: static !important; flex: 1 1 auto; width: auto !important; max-width: none !important; height: auto !important; min-height: 0; overflow: auto; border: 0 !important; }
+
+/* ---- layout "autorev" (0.8, owner 2026-10-26): the familiar BIM-authoring arrangement, drawn flat — a quick-access bar without boxes, ribbon tabs
+   that merge into their panel, panels named in a strip along their foot, borderless tools that light on hover, a thin view control bar.
+   Structure comes from the layout file; this block is only paint, keyed on body.ws-layout-autorev, tokens only (the owner restyles it here). ---- */
+.ws-layout-autorev .ws-titlebar { background: var(--ws-chrome); min-height: 1.75rem; gap: 0.375rem; }
+.ws-layout-autorev .ws-brand { font-size: 0.8125rem; font-stretch: 100%; }
+.ws-layout-autorev .ws-quick { border-right: 0; padding-right: 0.25rem; gap: 0; }
+.ws-layout-autorev :is(.ws-quick .ws-tool, .ws-titlebar > button) { border-color: transparent; background: transparent; }
+.ws-layout-autorev :is(.ws-quick .ws-tool, .ws-titlebar > button):hover { border-color: var(--ws-line); background: var(--ws-soft); }
+.ws-layout-autorev .ws-project { font-size: 0.75rem; }
+/* tabs: flat; the open one is the panel's own colour with a hairline frame on three sides, so it reads as part of the ribbon below it */
+.ws-layout-autorev .ws-ribbon-tabs { background: var(--ws-chrome); border-bottom: 1px solid var(--ws-line); padding: 0.125rem 0.25rem 0; gap: 0; }
+.ws-layout-autorev .ws-ribbon-tabs button { padding: 0.1875rem 0.75rem; border: 1px solid transparent; border-bottom: 0; background: transparent; font-weight: 400; margin-bottom: -1px; }
+.ws-layout-autorev .ws-ribbon-tabs button:hover { background: var(--ws-soft); }
+.ws-layout-autorev .ws-ribbon-tabs button[aria-selected="true"] { background: var(--ws-panel-bg); color: var(--ws-ink); font-weight: 400; border: 1px solid var(--ws-line); border-bottom: 1px solid var(--ws-panel-bg); }
+.ws-layout-autorev .ws-ribbon-tabs .ws-context-tab[aria-selected="true"] { background: color-mix(in srgb, var(--layer-green) 16%, var(--sheet)); }
+.ws-layout-autorev .ws-ribbon { padding: 0.125rem 0.1875rem 0; background: var(--ws-panel-bg); }
+/* panels: the name sits in a tinted strip across the foot, separators run the full height */
+.ws-layout-autorev .ws-group { padding: 0; height: 5.5rem; border-right: 1px solid var(--ws-line); }
+.ws-layout-autorev .ws-group-tools { padding: 0.125rem 0.25rem 0; }
+.ws-layout-autorev .ws-group-title { background: color-mix(in srgb, var(--ws-chrome) 70%, var(--ws-panel-bg)); border-top: 1px solid color-mix(in srgb, var(--ws-line) 55%, transparent); font-size: 0.6875rem; line-height: 1rem; }
+.ws-layout-autorev .ws-tool { height: 3.75rem; }
+.ws-layout-autorev .ws-tool:hover { background: var(--ws-soft); border-color: var(--ws-hover); }
+.ws-layout-autorev :is(.ws-stack .ws-tool, .ws-tool.ws-compact) { height: 1.1875rem; min-width: 4.5rem; }
+/* the options bar joins the ribbon (no rule between them) and names the running tool in bold */
+.ws-layout-autorev .ws-options { background: var(--ws-panel-bg); border-top: 0; border-bottom: 1px solid var(--ws-line); padding-block: 0.125rem; gap: 0.5rem; }
+.ws-layout-autorev .ws-options strong { font-weight: 700; }
+/* the view control bar: small, borderless, at the foot of the view */
+.ws-layout-autorev .ws-view-controls { gap: 0.25rem; padding: 0.0625rem 0.25rem; background: var(--ws-chrome); border-top: 1px solid var(--ws-line); }
+.ws-layout-autorev .ws-view-controls button { border-color: transparent; background: transparent; }
+.ws-layout-autorev .ws-view-controls button:hover { border-color: var(--ws-line); background: var(--ws-soft); }
+.ws-layout-autorev .ws-statusbar { background: var(--ws-chrome); border-top: 1px solid var(--ws-line); }
+/* a tool that is on stays lit (the borderless looks above must not hide it) */
+.ws-layout-autorev :is(.ws-top, .ws-bottom, .ws-region, .ws-palettes) :is(.ws-tool, .tbx-tool, .ws-view-controls button)[aria-pressed="true"] { background: color-mix(in srgb, var(--layer, var(--action)) 16%, var(--sheet)); border-color: var(--layer, var(--action)); }
+
+/* ---- Duncan (0.9 DU.1): two tool rows, an icon rail, a command line in the status strip, tear-offs ---- */
+.tr-toolrows { position: relative; display: block; flex: 1 1 auto; min-width: 0; background: var(--ws-chrome); border-bottom: 1px solid var(--ws-line); }
+.tr-rows { display: flex; flex-direction: column; }
+.tr-row { display: flex; align-items: stretch; gap: .125rem; padding: .125rem 1.75rem .125rem .375rem; overflow-x: auto; scrollbar-width: thin; }
+.tr-row + .tr-row { border-top: 1px solid var(--ws-line); }
+.tr-group { display: flex; align-items: stretch; gap: 1px; padding-right: .25rem; border-right: 1px solid var(--ws-line); flex-shrink: 0; }
+.tr-group:last-child { border-right: 0; }
+/* the tool icons (owner 2026-11-05: "ugly"): the apps draw them on a 32-unit grid with a 1.3-unit stroke, which at 20 px is under a pixel and
+   blue. Here they are 26 px with one 1.6 px stroke on every icon set (vector-effect keeps it the same whatever the grid), round ends, ink on
+   the bar and the accent only for the tool that is running. */
+.tr-group .ws-tool { height: 4.25rem; min-width: 3.25rem; max-width: 4.75rem; padding: .25rem .25rem .25rem; gap: .1875rem; justify-content: center; border: 1px solid transparent; border-radius: .25rem; background: transparent; color: var(--ink-2); font-size: .6875rem; line-height: .75rem; }
+.tr-group .ws-tool > span { max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow-wrap: anywhere; text-align: center; }
+.tr-group .ws-tool :is(.ws-icon, .ws-icon-bi) { width: 1.625rem; height: 1.625rem; font-size: 1.5rem; margin: 0; color: var(--ink); flex-shrink: 0; }
+.tr-group .ws-tool .ws-icon { fill: none; stroke: currentColor; overflow: visible; }
+.tr-group .ws-tool .ws-icon * { stroke-width: 1.6px; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.tr-group .ws-tool .ws-icon-bi::before { display: block; line-height: 1; }
+.tr-group .ws-tool:hover { background: var(--sheet); border-color: var(--ws-line); color: var(--ink); }
+.tr-group .ws-tool:focus-visible { outline: 2px solid var(--ws-blue); outline-offset: -2px; }
+.tr-group .ws-tool[aria-pressed="true"] { background: color-mix(in srgb, var(--ws-blue) 14%, transparent); border-color: var(--ws-blue); color: var(--ink); }
+.tr-group .ws-tool[aria-pressed="true"] :is(.ws-icon, .ws-icon-bi) { color: var(--ws-blue); }
+.tr-row { gap: .25rem; padding-block: .25rem; }
+.tr-group { gap: .125rem; padding-inline: .125rem .375rem; margin-right: .125rem; }
+.tr-more { position: relative; align-self: stretch; }
+.tr-more > summary { list-style: none; cursor: pointer; display: grid; place-items: center; height: 100%; min-width: .875rem; font-size: .625rem; color: var(--ws-muted); border: 1px solid transparent; border-radius: var(--radius, 2px); }
+.tr-more > summary::-webkit-details-marker { display: none; }
+.tr-more > summary:hover, .tr-more[open] > summary { border-color: var(--ws-line); color: var(--ink); background: var(--sheet); }
+.tr-more-list { position: fixed; z-index: 50; min-width: 11rem; max-height: 70vh; overflow-y: auto; display: flex; flex-direction: column; padding: .25rem; background: var(--sheet); border: 1px solid var(--ws-line); box-shadow: none; }
+/* a tool that cannot run now is plainly off (its reason is still its tooltip and what a click says) */
+.tr-toolrows .ws-tool[aria-disabled="true"] { opacity: .7; color: var(--ws-muted, var(--ink-2)); cursor: not-allowed; }   /* FX.90: grey by colour (works in labels-only mode), not only faded */
+.tr-toolrows .ws-tool[aria-disabled="true"] :is(.ws-label, span) { color: inherit; }
+.tr-toolrows .ws-tool[aria-disabled="true"]:hover { background: transparent; border-color: transparent; }
+.tr-more:has(.tr-more-list > .ws-tool:not([aria-disabled="true"])) > summary { color: var(--ink); }
+.tr-more:not(:has(.tr-more-list > .ws-tool:not([aria-disabled="true"]))) > summary { opacity: .38; }
+.tr-more-list .ws-tool { width: 100%; max-width: none; height: 2rem; flex-direction: row; justify-content: flex-start; gap: .5rem; padding: .125rem .5rem; }
+.tr-more-list .ws-tool :is(.ws-icon, .ws-icon-bi) { width: 1.25rem; height: 1.25rem; font-size: 1.125rem; }
+.tr-toolrows > .ws-popout-menu, .tr-toolrows > .shell-tb-tear { position: absolute; top: .125rem; right: .125rem; }
+.ws-region .tr-toolrows, .ws-top > .tr-toolrows { display: block; }
+.tr-popout .tr-toolrows { border: 0; }
+/* BK.35 the compact bar (Settings › Toolbar buttons › Icons only): the tool rows lose the labels under their icons and half their height;
+   a tool's name stays its tooltip and its accessible name. The full sets under ▾ keep their names (they are lists). */
+body[data-shell-tb="icons"] .tr-group .ws-tool:not(.tr-more-list .ws-tool) { width: 2.25rem; min-width: 2.25rem; height: 2.25rem; padding: 0; }
+body[data-shell-tb="icons"] .tr-group .ws-tool:not(.tr-more-list .ws-tool) > span { display: none; }
+body[data-shell-tb="icons"] .tr-row { padding-block: .125rem; }
+/* ... and the info box loses its group captions (each control keeps its own label or tooltip) */
+body[data-shell-tb="icons"] .tbx-ig-title { display: none; }
+body[data-shell-tb="icons"] .tbx-ig { padding-block: .2rem; }
+/* the icon rail: a column on the panel's left; only the chosen palette shows */
+.ws-palettes.ws-railed { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.ws-rail { grid-column: 1; grid-row: 1 / -1; display: flex; flex-direction: column; gap: .125rem; padding: .25rem 0; background: var(--ws-chrome); border-right: 1px solid var(--ws-line); }
+.ws-rail-btn { display: grid; place-items: center; height: 2.25rem; margin: 0 .25rem; border: 1px solid transparent; border-radius: var(--radius, 2px); background: transparent; color: var(--ink-2); font-size: 1.25rem; }
+.ws-rail-btn:hover { border-color: var(--ws-line); color: var(--ink); }
+.ws-rail-btn[aria-selected="true"] { background: var(--sheet); border-color: var(--ws-line); color: var(--ws-blue); }
+.ws-railed > .ws-palette, .ws-railed > .ws-hsplit { grid-column: 2; grid-row: 1; }
+.ws-railed > .ws-hsplit, .ws-railed .ws-lower-tabs { display: none; }
+.ws-railed[data-ws-rail-shows="upper"] > .ws-browser, .ws-railed[data-ws-rail-shows="lower"] > .ws-properties { display: none; }
+/* the command line docked in the status strip */
+.ws-cmdline { display: flex; align-items: center; gap: .25rem; flex: 0 1 16rem; min-width: 7rem; padding: 0 .375rem; border: 1px solid var(--ws-line); border-radius: var(--radius, 2px); background: var(--sheet); }
+.ws-cmdline .ws-cmd-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: .6875rem; padding: .125rem 0; }
+.ws-cmdline:focus-within { border-color: var(--ws-blue); }
+/* 0.10 BK.34 (app-cmdline.js): the history / the matching commands, opened above the strip while the field has the focus (fixed: the strip clips its own overflow) */
+.ws-cmd-pop { position: fixed; z-index: 100050; margin: 0; padding: .125rem 0; list-style: none; max-height: min(16rem, 50vh); max-width: 32rem; overflow-y: auto; background: var(--sheet); color: var(--ink); border: 1px solid var(--ws-line); border-radius: var(--radius, 2px); font-size: .75rem; }
+.ws-cmd-pop[hidden] { display: none; }
+.ws-cmd-pop li { display: flex; align-items: baseline; gap: .5rem; padding: .1875rem .5rem; cursor: default; white-space: nowrap; }
+.ws-cmd-pop li[aria-selected="true"], .ws-cmd-pop li:hover { background: var(--ws-blue); color: var(--sheet, #fff); }
+.ws-cmd-pop .ws-cmd-word { font-family: var(--font-mono, ui-monospace, monospace); }
+.ws-cmd-pop .ws-cmd-name { flex: 1; overflow: hidden; text-overflow: ellipsis; color: inherit; opacity: .8; }
+.ws-cmd-pop kbd { margin-left: auto; padding: 0 .25rem; border: 1px solid currentColor; border-radius: 2px; background: transparent; color: inherit; font-size: .6875rem; opacity: .8; }
+.ws-statusbar > .ws-popout-menu, .ws-statusbar > .shell-tb-tear { margin-left: auto; }
+
+/* ---- the CadCraft icon set (app-workspace-icons.js): roles, not colours; two styles; vectors that scale with their size ---- */
+html { --ic-a: #8fd3f5; --ic-b: #ffb870; --ic-c: #ffe07a; --ic-d: #f58b83; --ic-e: #93dca3; --ic-s1: #1d8fd0; --ic-s2: #e2761b; --ic-paper: var(--sheet, #fff); --ic-line: var(--ink, #1d2733); }
+html[data-cc-icons="outline"] { --ic-a: none; --ic-b: none; --ic-c: none; --ic-d: none; --ic-e: none; --ic-paper: none; --ic-line: var(--cc-icon-color, #1b7fb5); --ic-s1: var(--ic-line); --ic-s2: var(--ic-line); }
+.ccic { width: var(--ic-size, 1.75rem); height: var(--ic-size, 1.75rem); flex-shrink: 0; display: block; overflow: visible; fill: none; stroke: var(--ic-line); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.ccic .w { fill: var(--ic-paper); } .ccic .a { fill: var(--ic-a); } .ccic .b { fill: var(--ic-b); } .ccic .c { fill: var(--ic-c); } .ccic .d { fill: var(--ic-d); } .ccic .e { fill: var(--ic-e); }
+.ccic .s1 { stroke: var(--ic-s1); } .ccic .s2 { stroke: var(--ic-s2); } .ccic .t { stroke-width: 1; } .ccic .n { stroke: none; }
+.tr-group .ws-tool .ccic { width: 1.75rem; height: 1.75rem; color: inherit; }
+.tr-more-list .ws-tool .ccic { width: 1.375rem; height: 1.375rem; }
+/* a disabled tool's icon is plainly grey whatever the icon style or colour (owner 2026-11-06: it kept the picked colour, so a tool that could not run looked live) */
+:is([aria-disabled="true"], :disabled, .is-disabled) .ccic { filter: grayscale(1); opacity: .45; }
+:is([aria-disabled="true"], :disabled, .is-disabled) .ccic { --ic-line: var(--ws-muted, var(--ink-2)); --ic-s1: var(--ic-line); --ic-s2: var(--ic-line); }
+.tr-group .ws-tool[aria-pressed="true"] .ccic { --ic-line: var(--ws-blue); }
+.shell-icons-preview { display: flex; flex-wrap: wrap; gap: .5rem; padding: .5rem .25rem; }
+.shell-icons-preview .ccic { width: 2rem; height: 2rem; }
+
+/* ---- Vector (0.9 VEC.1): a classic menu bar over a view bar and a mode bar, Basic + Tool Sets palettes on the left, Object Info + Navigation on the right ---- */
+.vw-menubar { display: flex; align-items: stretch; flex: 1 1 auto; min-width: 0; height: 1.75rem; background: var(--ws-chrome); border-bottom: 1px solid var(--ws-line); }
+.vw-menubar .ws-brand { padding: 0 .75rem 0 .5rem; flex: 0 0 auto; border-right: 1px solid var(--ws-line); margin-right: .25rem; }
+.vw-menus { display: flex; align-items: stretch; min-width: 0; }
+.vw-menu { position: relative; display: flex; }
+.vw-menu-btn { border: 0 !important; border-radius: 0 !important; background: transparent !important; color: var(--ws-ink); padding: 0 .625rem !important; font: .8125rem var(--font) !important; }
+.vw-menu-btn:hover, .vw-menu-btn[aria-expanded="true"] { background: var(--ws-soft) !important; }
+.vw-title { flex: 1 1 auto; min-width: 0; align-self: center; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ws-muted); font-size: .75rem; padding: 0 .5rem; }
+.vw-right { display: flex; align-items: center; gap: .125rem; padding-right: .25rem; }
+.vw-panel { position: absolute; top: 100%; left: 0; z-index: 80; min-width: 13rem; max-width: 22rem; max-height: calc(100dvh - 3rem); overflow-y: auto; padding: .25rem 0; background: var(--sheet); border: 1px solid var(--ws-line); border-radius: 0 0 var(--radius, 2px) var(--radius, 2px); }
+.vw-panel hr { margin: .25rem 0; border: 0; border-top: 1px solid var(--ws-line); }
+.vw-item { display: flex !important; align-items: center; gap: .5rem; width: 100%; height: auto !important; min-height: 1.5rem; padding: .125rem .75rem !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; color: var(--ws-ink); text-align: left; font: .75rem var(--font) !important; justify-content: flex-start !important; }
+.vw-item:hover, .vw-item:focus-visible { background: var(--ws-soft) !important; }
+.vw-item > span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vw-item kbd { flex-shrink: 0; margin-left: 1rem; color: var(--ws-muted); font: .6875rem var(--font); background: none; border: 0; padding: 0; }
+.vw-item :is(.ws-icon, .ws-icon-bi, .ccic) { width: 1rem; height: 1rem; font-size: 1rem; flex-shrink: 0; }
+.vw-item[aria-disabled="true"] { color: var(--ws-muted); opacity: .6; cursor: default; }
+.vw-item[aria-pressed="true"]::after { content: "\2713"; margin-left: auto; color: var(--ws-blue); }
+.vw-sub { position: relative; }
+.vw-subhead i { flex: 0 0 auto; font-size: .6875rem; color: var(--ws-muted); }
+.vw-flyout { top: -.25rem; left: 100%; border-radius: var(--radius, 2px); }
+/* left palettes: Basic = an icon grid, Tool Sets = a list over a row of set icons */
+.vw-toolpalette { display: flex; flex-direction: column; width: calc(var(--vw-cols, 4) * 2.75rem + .75rem); min-height: 100%; background: var(--ws-chrome); border-right: 1px solid var(--ws-line); }
+.vw-pal { display: flex; flex-direction: column; min-height: 0; border-bottom: 1px solid var(--ws-line); }
+.vw-pal-head { padding: .125rem .375rem; font: 600 .6875rem var(--font); color: var(--ws-muted); border-bottom: 1px solid var(--ws-line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vw-grid { display: grid; grid-template-columns: repeat(var(--vw-cols, 4), 2.75rem); gap: .25rem 0; padding: .5rem .375rem; justify-content: center; }
+.vw-toolpalette .vw-cell { display: grid !important; place-items: center; width: 2.5rem; min-width: 0 !important; max-width: none; height: 2.5rem !important; margin: 0 auto; gap: 0; justify-content: center; align-content: center; padding: 0 !important; flex-direction: row; padding: 0 !important; border: 1px solid transparent !important; border-radius: var(--radius, 2px) !important; background: transparent !important; color: var(--ink); }
+.vw-cell:hover, .vw-row:hover, .vw-set:hover { background: var(--ws-soft) !important; border-color: var(--ws-line) !important; }
+.vw-toolpalette .vw-cell :is(.ccic, .ws-icon, .ws-icon-bi) { width: 1.625rem; height: 1.625rem; font-size: 1.5rem; margin: 0; }
+.vw-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.vw-list { display: flex; flex-direction: column; padding: .25rem 0; overflow-y: auto; }
+.vw-toolpalette .vw-row { display: flex !important; flex-direction: row !important; align-items: center; gap: .5rem; width: 100%; min-width: 0 !important; max-width: none; height: 1.875rem !important; padding: 0 .375rem !important; border: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--ink); font: .6875rem var(--font) !important; text-align: left; justify-content: flex-start !important; }
+.vw-row > span { flex: 1 1 auto; text-align: left; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vw-row :is(.ccic, .ws-icon, .ws-icon-bi) { width: 1.125rem; height: 1.125rem; font-size: 1rem; flex-shrink: 0; margin: 0; }
+.vw-setrow { display: grid; grid-template-columns: repeat(var(--vw-cols, 4), 1fr); gap: .25rem 0; padding: .375rem .375rem; border-top: 1px solid var(--ws-line); }
+.vw-set { display: grid !important; place-items: center; width: 2.5rem; height: 2.25rem; margin: 0 auto; padding: 0 !important; border: 1px solid transparent !important; border-radius: var(--radius, 2px) !important; background: transparent !important; color: var(--ink); }
+.vw-set[aria-selected="true"] { background: var(--ws-soft) !important; border-color: var(--ws-blue) !important; }
+.vw-set :is(.ccic, .ws-icon, .ws-icon-bi) { width: 1.25rem; height: 1.25rem; font-size: 1.125rem; margin: 0; }
+.vw-toolpalette :is(.vw-cell, .vw-row)[aria-pressed="true"] { background: color-mix(in srgb, var(--ws-blue) 16%, var(--sheet)) !important; border-color: var(--ws-blue) !important; }
+.vw-toolpalette :is(.vw-cell, .vw-row)[aria-pressed="true"] .ccic { --ic-line: var(--ws-blue); }
+.vw-toolpalette [aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
+.vw-toolpalette :is(.ccic, .ws-icon) { stroke-width: 1.5; }
+.vw-row :is(.ccic, .ws-icon, .ws-icon-bi) { width: 1.25rem; height: 1.25rem; font-size: 1.125rem; }
+/* Attributes: the selection's style controls, label over control, in Fill / Pen / Other groups */
+.vw-attrs-body { display: flex; flex-direction: column; padding: .25rem .5rem .5rem; min-height: 2rem; }
+.vw-attrs .tbx-fields { display: flex; flex-direction: column; gap: .25rem; overflow: visible; }
+.vw-attrs .tbx-fields-head { margin-top: .25rem; font: 600 .6875rem var(--font); color: var(--ws-muted); border-bottom: 1px solid var(--ws-line); padding-bottom: .125rem; }
+.vw-attrs .tbx-field { display: grid; grid-template-columns: minmax(0, 4.5rem) minmax(0, 1fr); align-items: center; gap: .375rem; font-size: .6875rem; color: var(--ws-muted); }
+.vw-attrs .tbx-field > span { max-width: none; }
+.vw-attrs .tbx-field :is(input, select) { width: 100%; min-width: 0; height: 1.5rem; font: .6875rem var(--font); }
+.vw-attrs .tbx-field input[type="color"] { padding: 0 .125rem; }
+.vw-attrs .tbx-field input[type="checkbox"] { width: auto; justify-self: start; height: auto; }
+.vw-attrs-note { margin: 0; padding: .25rem 0; font-size: .6875rem; color: var(--ws-muted); }
+
+/* BK.35 the compact bar (Settings › Toolbar buttons › Icons only) in Vector: the palette goes from four columns to two (as Rhino's strip)
+   and the Tool Sets list loses its names (each tool keeps its tooltip and its accessible name); Attributes stack label over control */
+body[data-shell-tb="icons"] .vw-toolpalette:not(.vw-strip) { --vw-cols: 2 !important; }
+body[data-shell-tb="icons"] .vw-toolpalette:not(.vw-strip) .vw-list { display: grid; grid-template-columns: repeat(2, 2.75rem); justify-content: center; gap: .125rem 0; }
+body[data-shell-tb="icons"] .vw-toolpalette:not(.vw-strip) .vw-row { width: 2.5rem !important; height: 2.25rem !important; margin: 0 auto; padding: 0 !important; justify-content: center; border-radius: var(--radius, 2px) !important; }
+body[data-shell-tb="icons"] .vw-toolpalette:not(.vw-strip) .vw-row > span { display: none; }
+body[data-shell-tb="icons"] .vw-toolpalette:not(.vw-strip) .vw-pal { overflow-y: auto; scrollbar-width: thin; }   /* twice the rows in half the columns: a palette that runs out of height scrolls, it never cuts a tool off */
+body[data-shell-tb="icons"] .vw-toolpalette:not(.vw-strip) .vw-attrs .tbx-field { grid-template-columns: minmax(0, 1fr); gap: .125rem; }
+/* ---- Sketch (0.9 SK.1): Vector's menu bar and tool rows, with a slim one-column strip of drawing tools on the left ---- */
+.vw-toolpalette.vw-strip { width: calc(var(--vw-cols, 1) * 2.5rem + .375rem); }   /* columns: 1 = Sketch's slim strip, 2 = Rhino's */
+.vw-strip .vw-pal-head { display: none; }
+.vw-strip .vw-pal { border-bottom: 0; }
+.vw-strip .vw-grid { grid-template-columns: repeat(var(--vw-cols, 1), 2.5rem); justify-content: center; gap: .125rem 0; padding: .375rem 0; }
+.vw-strip .vw-cell { width: 2.25rem; height: 2.25rem !important; }
+.vw-strip .vw-cell :is(.ccic, .ws-icon, .ws-icon-bi) { width: 1.5rem; height: 1.5rem; font-size: 1.375rem; }
+/* Sketch's tool rows are icons only (the name is the tooltip), as that kind of program draws its toolbars */
+main[data-ws-layout="sketch"] .tr-toolrows .ws-tool { min-width: 0; }
+main[data-ws-layout="sketch"] .tr-toolrows .ws-tool > span:not(.ws-icon) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Real buttons (btn-line, btn-plot) of an app's own panel, docked in a layout's palettes: the blanket button reset above leaves them as plain 12px text with no frame, and the
+   site's 3 rem minimum height still makes each one 48px tall. They keep a frame and a label-sized box in the layout's own text size. */
+:is(.ws-palettes) button:is(.btn-line, .btn-plot) { font-weight: 600; padding: 0.3125rem 0.75rem; min-height: 0; line-height: 1.25; gap: 0.4rem; border: 1px solid var(--ws-blue, var(--action)); border-radius: 2px; color: var(--ws-blue, var(--action)); }
+:is(.ws-palettes) button.btn-plot { background: var(--ws-blue, var(--action)); color: var(--on-action, #fff); }
+:is(.ws-palettes) button:is(.btn-line, .btn-plot):hover { border-color: var(--ws-hover, var(--ws-blue)); background: var(--ws-soft); color: var(--ws-ink); }
+:is(.ws-palettes) button.btn-plot:hover { background: var(--ws-ink); border-color: var(--ws-ink); color: var(--sheet, #fff); }
+
+/* 2026-11-12 (owner: "menu doesn't open up big enough for submenu"): a menu-bar list that holds submenus never scrolls. With overflow-y: auto its flyouts (absolute, left: 100%)
+   were clipped inside it and it grew both scrollbars. Such a list is short (its items are the groups); the flyouts keep their own scrolling. Lab builds only (body.shell-lab). */
+body.shell-lab .vw-panel:not(.vw-flyout):has(.vw-flyout) { overflow: visible; max-height: none; }
+
+/* ==== The Pro skin (0.10 PRO.1, owner 2026-11-13: "solidly professional … 8 UIs appear uniform and cohesive"). look.skin "pro" in a layout file →
+   body.ws-skin-pro. Paint only: one chrome for every app (a graphite title or menu bar, a bar tone, a band tone, white panels), one hairline, one
+   set of bar heights on a 4 px step (title 2rem, tabs / options / view bars 1.75rem, status 1.5rem), tools without frames that light on hover, icons
+   in one neutral ink in every app (the app's layer colour is the accent only: the open tab, the running tool, the brand), panel content at the
+   chrome's text size, and a shadow under everything that floats. The layouts that use it: pro-cad1 … pro-cad4 (assets/workspaces). Nothing here
+   reaches a layout without the skin. ---- */
+body.ws-skin-pro, .ws-skin-pro:is(.ws-ribbon-window, .ws-popout) {
+  --pro-title: #1E2630; --pro-title-ink: #E9EEF3; --pro-title-muted: #9FACB9; --pro-title-hover: rgb(255 255 255 / .1);
+  --pro-bar: #E3E8ED; --pro-band: #F4F6F8; --pro-panel: #FFFFFF; --pro-field: #FFFFFF;
+  --pro-line: #C3CBD4; --pro-line-2: #DBE1E7; --pro-ink: #18212C; --pro-muted: #5A6774; --pro-icon: #35414F;
+  --pro-accent: var(--layer, var(--action)); --pro-hover: rgb(24 33 44 / .07); --pro-press: color-mix(in srgb, var(--pro-accent) 15%, var(--pro-band));
+  --pro-shadow: 0 .5rem 1.5rem rgb(15 23 32 / .22), 0 1px 3px rgb(15 23 32 / .18); --pro-r: .1875rem;
+  --ws-ink: var(--pro-ink); --ws-line: var(--pro-line); --ws-chrome: var(--pro-bar); --ws-panel-bg: var(--pro-panel); --ws-muted: var(--pro-muted);
+  --ws-soft: var(--pro-hover); --ws-hover: var(--pro-line); --ws-blue: var(--pro-accent); --ic-line: var(--pro-icon);
+}
+:root[data-space="model"] body.ws-skin-pro, :root[data-space="model"] .ws-skin-pro:is(.ws-ribbon-window, .ws-popout) {
+  --pro-title: #12161B; --pro-title-ink: #E6ECF2; --pro-title-muted: #8E9BA8; --pro-bar: #232A33; --pro-band: #2A323C; --pro-panel: #1E242C; --pro-field: #161B21;
+  --pro-line: #3A4551; --pro-line-2: #303944; --pro-ink: #E3E9EF; --pro-muted: #9BA8B5; --pro-icon: #CBD5DF; --pro-hover: rgb(255 255 255 / .08);
+  --pro-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .5), 0 1px 3px rgb(0 0 0 / .4);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-space="paper"]) body.ws-skin-pro, :root:not([data-space="paper"]) .ws-skin-pro:is(.ws-ribbon-window, .ws-popout) {
+    --pro-title: #12161B; --pro-title-ink: #E6ECF2; --pro-title-muted: #8E9BA8; --pro-bar: #232A33; --pro-band: #2A323C; --pro-panel: #1E242C; --pro-field: #161B21;
+    --pro-line: #3A4551; --pro-line-2: #303944; --pro-ink: #E3E9EF; --pro-muted: #9BA8B5; --pro-icon: #CBD5DF; --pro-hover: rgb(255 255 255 / .08);
+    --pro-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .5), 0 1px 3px rgb(0 0 0 / .4);
+  }
+}
+/* -- base: one text size, one radius, thin scroll bars, no frames on buttons until the pointer is on them -- */
+.ws-skin-pro :is(.ws-top, .ws-bottom, .ws-palettes, .ws-region, .ws-ribbon-box) { font: .75rem/1.25 var(--font); color: var(--pro-ink); scrollbar-width: thin; scrollbar-color: var(--pro-line) transparent; }
+.ws-skin-pro :is(.ws-top, .ws-bottom, .ws-palettes, .ws-ribbon-box, .ws-drawing-tabs, .ws-view-controls) button { border-radius: var(--pro-r); }
+.ws-skin-pro :is(.ws-top, .ws-bottom, .ws-palettes, .ws-ribbon-box, .ws-drawing-tabs, .ws-view-controls) button:hover { border-color: transparent; background: var(--pro-hover); }
+.ws-skin-pro :is(.ws-top, .ws-bottom, .ws-palettes, .ws-region, .ws-ribbon-box) :is(button, select, input, [tabindex]):focus-visible { outline: 2px solid var(--pro-accent); outline-offset: -2px; }
+.ws-skin-pro :is(.ws-quick .ws-tool, .ws-titlebar > button, .ws-options > button, .ws-options .ws-tool, .ws-view-controls button, .ws-palette-heading button, .ws-ribbon-tabs .ws-tear) { border-color: transparent; background: transparent; }
+.ws-skin-pro :is(.ws-icon, .ws-icon-bi), .ws-skin-pro .ws-tool .ws-icon, .ws-skin-pro :is(.tbx-tool, .ws-pet-tool, .ws-drawing-tab, .tbx-tab) :is(.bi, .ws-icon) { color: var(--pro-icon); }
+.ws-skin-pro .ws-host { background: var(--pro-bar) !important; }
+.ws-skin-pro :is(.ws-top, .ws-bottom) { background: var(--pro-bar); }
+/* the running tool, an on/off command that is on: the accent tint and a 2 px accent foot, the same mark in every block */
+.ws-skin-pro :is(.ws-top, .ws-bottom, .ws-region, .ws-ribbon-box, .ws-palettes, .tbx-popout) :is(.ws-tool, .tbx-tool, .vw-cell, .vw-row)[aria-pressed="true"] { background: linear-gradient(to top, var(--pro-accent) 2px, transparent 2px) var(--pro-press) !important; border-color: transparent !important; }
+.ws-skin-pro :is(.ws-tool, .tbx-tool, .vw-cell, .vw-row, .ws-pet-tool)[aria-pressed="true"] :is(.ws-icon, .ws-icon-bi, .bi) { color: var(--pro-accent); }
+.ws-skin-pro :is(.ws-tool, .tbx-tool, .vw-cell, .vw-row)[aria-pressed="true"] .ccic { --ic-line: var(--pro-accent); }
+.ws-skin-pro :is(.ws-top, .ws-bottom, .ws-region, .ws-ribbon-box) [aria-disabled="true"] { color: color-mix(in srgb, var(--pro-muted) 70%, transparent); }
+
+/* -- the title bar and the menu bar: the same graphite strip, the app's mark and name at its start, the app's colour in a 2 px line across the window's top -- */
+.ws-skin-pro :is(.ws-titlebar, .vw-menubar) { height: 2rem; min-height: 2rem; padding: 0 .375rem 0 .625rem; gap: .5rem; box-sizing: border-box; background: var(--pro-title); color: var(--pro-title-ink); border: 0; border-top: 2px solid var(--pro-accent); }
+.ws-skin-pro :is(.ws-titlebar, .vw-menubar) .ws-brand { font-size: .8125rem; font-weight: 700; font-stretch: 108%; letter-spacing: .01em; color: var(--pro-title-ink); padding: 0 .75rem 0 0; margin: 0; border: 0; gap: .5rem; }
+.ws-skin-pro :is(.ws-titlebar, .vw-menubar) .ws-brand :is(a, svg) { color: var(--pro-title-ink); }
+/* owner 2026-11-15: the "Starting up…" chip moves after the brand (app-workspace.js bootTo); on the graphite bar its ink is the bar's muted ink, tinting to the app colour */
+.ws-skin-pro :is(.ws-titlebar, .vw-menubar) .app-bar-boot { --ink-2: var(--pro-title-muted); --action: var(--pro-title-ink); margin-left: 0; flex: 0 1 auto; min-width: 0; }
+:is(.ws-titlebar, .vw-menubar) .app-bar-boot { flex: 0 1 auto; min-width: 0; }
+.ws-skin-pro .ws-quick { gap: .125rem; padding: 0 .5rem; border: 0; border-inline: 1px solid var(--pro-edge, #ffffff24); }
+.ws-skin-pro .ws-quick .ws-tool, .ws-skin-pro .ws-quick .ws-tool.ws-compact { width: 1.625rem; min-width: 1.625rem; max-width: 1.625rem; height: 1.625rem; }
+.ws-skin-pro :is(.ws-titlebar, .vw-menubar) :is(.ws-icon, .ws-icon-bi, .bi), .ws-skin-pro :is(.ws-titlebar, .vw-menubar) button { color: var(--pro-title-ink); }
+.ws-skin-pro :is(.ws-titlebar, .vw-menubar) button:hover, .ws-skin-pro .vw-menu-btn[aria-expanded="true"] { background: var(--pro-title-hover) !important; }
+.ws-skin-pro :is(.ws-titlebar, .vw-menubar) [aria-disabled="true"] :is(.ws-icon, .ws-icon-bi, .bi) { color: var(--pro-title-muted); opacity: .6; }
+.ws-skin-pro :is(.ws-project, .vw-title) { font-size: .75rem; color: var(--pro-title-muted); letter-spacing: .01em; }
+.ws-skin-pro .ws-shell-btn { width: 1.75rem; height: 1.625rem; display: inline-grid; place-items: center; padding: 0 !important; font-size: .9375rem !important; }
+.ws-skin-pro .ws-titlebar > button:not(.ws-shell-btn) { font-size: .6875rem; color: var(--pro-title-muted); }
+.ws-skin-pro .vw-menus { gap: 0; }
+.ws-skin-pro .vw-menu-btn { font: .75rem var(--font) !important; color: var(--pro-title-ink) !important; padding: 0 .5625rem !important; border-radius: 0 !important; }
+.ws-skin-pro .vw-right { gap: .125rem; padding: 0; }
+/* -- what floats: menus and lists (ink on the panel tone, a hairline, a shadow) -- */
+.ws-skin-pro :is(.vw-panel, .tr-more-list, .ws-pet), body.ws-skin-pro > :is(.ws-file-menu, .ws-ctx-menu, .ws-cmd-pop, .shell-panel-menu) { background: var(--pro-panel); color: var(--pro-ink); border: 1px solid var(--pro-line); border-radius: .25rem; }
+.ws-skin-pro .ws-pet:not([hidden]) { box-shadow: var(--shell-shadow, var(--pro-shadow)); }
+html.sc-noshadow .ws-skin-pro .ws-pet { box-shadow: none; }
+.ws-skin-pro .vw-panel { padding: .25rem; min-width: 14rem; }
+.ws-skin-pro .vw-panel hr { border-color: var(--pro-line-2); margin: .25rem .25rem; }
+.ws-skin-pro .vw-item { min-height: 1.625rem; padding: .125rem .625rem !important; border-radius: var(--pro-r) !important; color: var(--pro-ink) !important; font-size: .75rem; }
+.ws-skin-pro .vw-item :is(.ws-icon, .ws-icon-bi, .bi) { color: var(--pro-icon); }
+.ws-skin-pro .vw-item:is(:hover, :focus-visible) { background: var(--pro-press) !important; }
+.ws-skin-pro .vw-item kbd { color: var(--pro-muted); }
+body.ws-skin-pro > .ws-file-menu { padding: .25rem; min-width: 20rem; font-size: .8125rem; }
+body.ws-skin-pro > .ws-file-menu .ws-file-item { min-height: 2rem; padding: .25rem .625rem; border: 0; border-radius: var(--pro-r); }
+body.ws-skin-pro > .ws-file-menu .ws-file-item:is(:hover, :focus-visible) { background: var(--pro-press); }
+body.ws-skin-pro > .ws-file-menu .ws-file-item :is(.bi, .ws-icon) { color: var(--pro-icon); font-size: 1rem; width: 1.125rem; height: 1.125rem; }
+body.ws-skin-pro > .ws-file-menu .ws-file-sep { border-color: var(--pro-line-2); }
+
+/* -- the ribbon: tabs on the bar tone, the open tab joined to the band with the accent on top; panels named along their foot -- */
+.ws-skin-pro .ws-ribbon-tabs { height: 1.75rem; padding: 0 .375rem; gap: .125rem; background: var(--pro-bar); border-bottom: 1px solid var(--pro-line); align-items: flex-end; }
+.ws-skin-pro .ws-ribbon-tabs button { height: 1.5rem; padding: 0 .75rem; border: 1px solid transparent; border-bottom: 0; border-radius: var(--pro-r) var(--pro-r) 0 0; background: transparent; color: var(--pro-ink); font-weight: 500; margin-bottom: -1px; }
+.ws-skin-pro .ws-ribbon-tabs button:hover { background: var(--pro-hover); }
+.ws-skin-pro .ws-ribbon-tabs button[aria-selected="true"] { background: var(--pro-band); border-color: var(--pro-line); border-bottom: 1px solid var(--pro-band); border-top: 2px solid var(--pro-accent); font-weight: 600; color: var(--pro-ink); }
+/* File is filled with the app's colour in the Pro skin only (owner 2026-11-13: "yes fill the File tab"); every other layout keeps File like the other tabs (owner 2026-10-24) */
+.ws-skin-pro .ws-ribbon-tabs .ws-file-tab { --pro-file: color-mix(in srgb, var(--pro-accent) 86%, var(--pro-shade, #000)); font-weight: 600; padding-inline: 1rem; background: var(--pro-file); border-color: var(--pro-file); color: var(--on-action); }
+.ws-skin-pro .ws-ribbon-tabs .ws-file-tab:is(:hover, :focus-visible, [aria-expanded="true"]) { --pro-file: color-mix(in srgb, var(--pro-accent) 72%, var(--pro-shade, #000)); background: var(--pro-file); color: var(--on-action); }
+.ws-skin-pro .ws-ribbon-tabs .ws-context-tab { color: var(--layer-green); }
+.ws-skin-pro .ws-ribbon-tabs .ws-tear { align-self: center; width: 1.5rem; height: 1.375rem; margin-bottom: 0; border-radius: var(--pro-r); }
+.ws-skin-pro .ws-ribbon { background: var(--pro-band); padding: .25rem .375rem 0; border-bottom: 1px solid var(--pro-line); }
+.ws-skin-pro .ws-group { height: 5.25rem; padding: 0 .375rem; border-right: 1px solid var(--pro-line-2); }
+.ws-skin-pro .ws-group:last-child { border-right: 0; }
+.ws-skin-pro .ws-group-tools { gap: .125rem; }
+.ws-skin-pro .ws-group-title { font-size: .6875rem; line-height: 1.125rem; color: var(--pro-muted); letter-spacing: .01em; }
+.ws-skin-pro .ws-ribbon .ws-tool, .ws-skin-pro .tbx-tool { border: 1px solid transparent; background: transparent; border-radius: var(--pro-r); color: var(--pro-ink); }
+.ws-skin-pro .ws-ribbon .ws-tool:hover, .ws-skin-pro .tbx-tool:hover { background: var(--pro-hover); border-color: transparent; }
+.ws-skin-pro .ws-ribbon .ws-tool { height: 3.875rem; min-width: 2.875rem; padding: .25rem .375rem; gap: .25rem; font-size: .6875rem; line-height: .875rem; }
+.ws-skin-pro .ws-ribbon .ws-tool .ws-icon { width: 1.75rem; height: 1.75rem; stroke-width: 1.35; margin: 0; }
+.ws-skin-pro .ws-ribbon .ws-tool .ws-icon-bi { font-size: 1.5rem; height: 1.75rem; display: grid; place-items: center; }
+.ws-skin-pro .ws-ribbon :is(.ws-stack .ws-tool, .ws-tool.ws-compact) { height: 1.25rem; min-width: 5rem; padding: 0 .375rem; gap: .375rem; }
+.ws-skin-pro .ws-ribbon :is(.ws-stack .ws-tool, .ws-tool.ws-compact) .ws-icon { width: 1rem; height: 1rem; stroke-width: 1.5; }
+.ws-skin-pro .ws-ribbon :is(.ws-stack .ws-tool, .ws-tool.ws-compact) .ws-icon-bi { font-size: .9375rem; height: auto; }
+.ws-skin-pro .ws-stack { gap: .0625rem; }
+.ws-skin-pro .ws-collapsed.ws-peek > .ws-ribbon { box-shadow: var(--shell-shadow, var(--pro-shadow)); }
+html.sc-noshadow .ws-skin-pro .ws-collapsed.ws-peek > .ws-ribbon { box-shadow: none; }
+/* -- the options bar: one quiet line under the ribbon; the tool's name is the only bold thing in it -- */
+.ws-skin-pro .ws-options { height: 1.75rem; min-height: 1.75rem; padding: 0 .625rem; gap: .625rem; background: var(--pro-band); border: 0; border-bottom: 1px solid var(--pro-line); }
+.ws-skin-pro .ws-options strong { font-weight: 700; } .ws-skin-pro .ws-options > span { color: var(--pro-muted); }
+
+/* -- tool rows: the band tone, tools without frames; in the workbench (pro-cad2) each group is named under its tools -- */
+.ws-skin-pro .tr-toolrows { background: var(--pro-band); border-bottom: 1px solid var(--pro-line); }
+.ws-skin-pro .tr-row { gap: 0; padding: .1875rem 1.75rem .1875rem .375rem; }
+.ws-skin-pro .tr-row + .tr-row { border-top: 1px solid var(--pro-line-2); }
+.ws-skin-pro .tr-group { gap: .0625rem; padding: 0 .375rem; margin: 0; border-right: 1px solid var(--pro-line-2); }
+.ws-skin-pro .tr-group .ws-tool { border-radius: var(--pro-r); color: var(--pro-ink); font-size: .6875rem; line-height: .8125rem; }
+.ws-skin-pro .tr-group .ws-tool :is(.ws-icon, .ws-icon-bi) { color: var(--pro-icon); }
+.ws-skin-pro .tr-group .ws-tool:hover { background: var(--pro-hover); border-color: transparent; }
+.ws-skin-pro .tr-more > summary { min-width: 1rem; border-radius: var(--pro-r); color: var(--pro-muted); }
+.ws-skin-pro .tr-more > summary:hover, .ws-skin-pro .tr-more[open] > summary { background: var(--pro-hover); border-color: transparent; color: var(--pro-ink); }
+.ws-skin-pro .tr-more-list { padding: .25rem; }
+.ws-skin-pro .tr-more-list .ws-tool { height: 1.75rem; font-size: .75rem; }
+.ws-skin-pro .tr-more-list .ws-tool:hover { background: var(--pro-press); }
+.ws-layout-pro-cad2 .tr-row[data-tr-row="2"]:empty { display: none; }
+.ws-layout-pro-cad2 .tr-row { padding-block: .25rem 0; }
+.ws-layout-pro-cad2 .tr-group { position: relative; padding-bottom: 1.125rem; }
+.ws-layout-pro-cad2 .tr-group::after { content: attr(aria-label); position: absolute; left: 0; right: 0; bottom: 0; height: 1.125rem; line-height: 1.125rem; text-align: center; font-size: .6875rem; color: var(--pro-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 .25rem; pointer-events: none; }
+.ws-layout-pro-cad2 .tr-group .ws-tool { height: 4rem; min-width: 3.25rem; max-width: 4.75rem; padding: .25rem .25rem .125rem; justify-content: flex-start; gap: .1875rem; }
+.ws-layout-pro-cad2 .tr-group .ws-tool > span { line-height: .8125rem; min-height: 1.625rem; }
+.ws-layout-pro-cad2 .tr-more > summary { height: calc(100% - .25rem); }
+/* the review desk and the studio (pro-cad3, pro-cad4): rows of icons, the name in the tooltip, as that kind of program draws its toolbars */
+:is(.ws-layout-pro-cad3, .ws-layout-pro-cad4) .tr-group .ws-tool:not(.tr-more-list .ws-tool) { width: 2rem; min-width: 2rem; height: 2rem; padding: 0; }
+:is(.ws-layout-pro-cad3, .ws-layout-pro-cad4) .tr-group .ws-tool:not(.tr-more-list .ws-tool) > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:is(.ws-layout-pro-cad3, .ws-layout-pro-cad4) .tr-group .ws-tool:not(.tr-more-list .ws-tool) :is(.ws-icon, .ws-icon-bi, .ccic) { width: 1.375rem; height: 1.375rem; font-size: 1.25rem; }
+:is(.ws-layout-pro-cad3, .ws-layout-pro-cad4) .tr-row[data-tr-row="2"]:empty { display: none; }
+
+/* -- panels: the shell's grip and the palette headings are one strip on the bar tone; the app's own content at the chrome's text size -- */
+body.ws-skin-pro main > aside { background: var(--pro-panel); border-color: var(--pro-line) !important; }
+body.ws-skin-pro main > aside > .shell-grip { min-height: 1.75rem; padding: 0 .25rem 0 .5rem; font-size: .75rem; font-weight: 600; color: var(--pro-ink); background: var(--pro-bar); border-bottom: 1px solid var(--pro-line); }
+body.ws-skin-pro main > aside > .shell-grip .shell-grip-handle .bi { color: var(--pro-muted); }
+body.ws-skin-pro main > aside > .shell-grip :is(.shell-grip-menu, .shell-grip-btn) { border-radius: var(--pro-r); color: var(--pro-muted); }
+body.ws-skin-pro main > aside > .shell-grip :is(.shell-grip-menu, .shell-grip-btn):hover { background: var(--pro-hover); border-color: transparent; color: var(--pro-ink); }
+body.ws-skin-pro main > aside:not(.ws-panel-host) > :not(.shell-grip, .shell-float-size, .shell-dock-split, [role="separator"]) { zoom: .82; }   /* an app panel's own content is drawn at the site's reading size: brought to the chrome's (rem layouts kept in proportion, as .ws-model-slot) */
+.ws-skin-pro .ws-palettes { background: var(--pro-panel); }
+.ws-skin-pro .ws-palettes:not(.ws-railed, .ws-one) { grid-template-rows: minmax(6.25rem, var(--ws-props, 50%)) .25rem minmax(6.25rem, 1fr); }
+.ws-skin-pro .ws-model-slot { zoom: .82; }
+.ws-skin-pro .ws-palette-heading { min-height: 1.75rem; padding: 0 .375rem 0 .5rem; background: var(--pro-band); border-bottom: 1px solid var(--pro-line-2); font-size: .75rem; font-weight: 600; color: var(--pro-ink); }
+.ws-skin-pro .ws-palette-heading button { font-size: .6875rem; color: var(--pro-muted); }
+.ws-skin-pro .ws-hsplit { background: var(--pro-bar); border-block: 1px solid var(--pro-line); }
+.ws-skin-pro .ws-hsplit:hover, .ws-skin-pro .ws-hsplit[data-dragging="true"] { background: var(--pro-accent) !important; }
+.ws-skin-pro .ws-lower-tabs { align-self: stretch; gap: 0; margin-left: -.5rem; }
+.ws-skin-pro .ws-lower-tabs button { height: 100%; padding: 0 .625rem; border: 0; border-top: 2px solid transparent; border-radius: 0; font-size: .75rem; font-weight: 500; color: var(--pro-muted); }
+.ws-skin-pro .ws-lower-tabs button[aria-selected="true"] { color: var(--pro-ink); font-weight: 600; background: var(--pro-panel); border: 0; border-top: 2px solid var(--pro-accent); }
+.ws-skin-pro .ws-browser-hint { font-size: .6875rem; line-height: 1rem; padding: .375rem .5rem; border-bottom: 1px solid var(--pro-line-2); color: var(--pro-muted); }
+.ws-skin-pro .ws-rail { background: var(--pro-bar); border-right: 1px solid var(--pro-line); gap: .125rem; padding: .25rem 0; }
+.ws-skin-pro .ws-rail-btn { height: 2rem; margin: 0 .1875rem; border: 0; border-radius: var(--pro-r); color: var(--pro-muted); font-size: 1.0625rem; }
+.ws-skin-pro .ws-rail-btn:hover { background: var(--pro-hover); color: var(--pro-ink); }
+.ws-skin-pro .ws-rail-btn[aria-selected="true"] { background: linear-gradient(to right, var(--pro-accent) 2px, transparent 2px) var(--pro-panel); color: var(--pro-accent); }
+body.ws-skin-pro main > .shell-split::after { background: var(--pro-line); }
+
+/* -- the drawing's own bars: document tabs, the view control bar, the quick bar, the info box -- */
+.ws-skin-pro .ws-drawing-tabs { height: 1.75rem; padding: 0 .25rem; gap: .125rem; align-items: flex-end; background: var(--pro-bar); border-bottom: 1px solid var(--pro-line); }
+.ws-skin-pro .ws-drawing-tab { height: 1.5rem; border: 1px solid transparent; border-bottom: 0; border-radius: var(--pro-r) var(--pro-r) 0 0; margin-bottom: -1px; align-items: center; }
+.ws-skin-pro .ws-drawing-tab button { height: 100%; padding: 0 .25rem 0 .625rem; border: 0; background: transparent; color: var(--pro-muted); display: inline-flex; align-items: center; gap: .375rem; }
+.ws-skin-pro .ws-drawing-tab button + button { width: 1.125rem; height: 1.125rem; margin-right: .25rem; padding: 0; justify-content: center; font-size: .875rem; line-height: 1; color: var(--pro-muted); border-radius: var(--pro-r); }
+.ws-skin-pro .ws-drawing-tab:has([aria-selected="true"]) { background: linear-gradient(to bottom, var(--pro-accent) 2px, transparent 2px) var(--pro-panel); border-color: var(--pro-line); }
+.ws-skin-pro .ws-drawing-tab [aria-selected="true"] { background: transparent; border: 0; color: var(--pro-ink); font-weight: 600; }
+.ws-skin-pro .ws-drawing-tab .bi { font-size: .8125rem; }
+.ws-skin-pro .tbx-tabs { background: var(--pro-bar); border-bottom: 1px solid var(--pro-line); }
+.ws-skin-pro .tbx-tab { font-size: .75rem; padding: .3125rem .75rem; color: var(--pro-muted); border-right: 0; }
+.ws-skin-pro .tbx-tab[aria-selected="true"] { background: var(--pro-panel); color: var(--pro-ink); border-bottom-color: var(--pro-accent); }
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick) { height: 1.75rem; min-height: 1.75rem; flex-wrap: nowrap; gap: .5rem; padding: 0 .5rem; background: var(--pro-band); border-top: 1px solid var(--pro-line); font: .75rem var(--font); color: var(--pro-ink); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; white-space: nowrap; }
+.ws-skin-pro .ws-drawing-title { font-weight: 600; padding-right: .5rem; border-right: 1px solid var(--pro-line-2); }
+.ws-skin-pro .tbx-info { background: var(--pro-band); border-bottom: 1px solid var(--pro-line); font-size: .75rem; flex-wrap: nowrap; overflow: hidden; }
+.ws-skin-pro .tbx-ig { flex-direction: row; align-items: center; gap: .5rem; padding: 0 .625rem; min-height: 1.75rem; border-right: 1px solid var(--pro-line-2); }
+.ws-skin-pro .tbx-ig-title { font-size: .6875rem; font-weight: 600; color: var(--pro-muted); }
+.ws-skin-pro .tbx-ig-body { min-height: 0; gap: .375rem; flex-wrap: nowrap; }
+.ws-skin-pro .tbx-sel { color: var(--pro-muted); }
+/* the app's own controls moved into a bar (a scale list, a units list, view buttons): the bar's size and frame, whatever the app drew them as */
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick, .tbx-info, .ws-options, .ws-status-slot) :is(label, span, a) { font-size: .75rem !important; line-height: 1.25 !important; }
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick, .tbx-info, .ws-options, .ws-status-slot) label { display: inline-flex; flex-direction: row !important; align-items: center !important; gap: .3125rem; margin: 0; color: var(--pro-muted); white-space: nowrap; }
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick, .tbx-info, .ws-options, .ws-status-slot) :is(select, input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"])) { height: 1.375rem !important; min-height: 0 !important; margin-block: 0 !important; padding: 0 .375rem !important; font: .75rem var(--font) !important; color: var(--pro-ink) !important; background-color: var(--pro-field) !important; border: 1px solid var(--pro-line) !important; border-radius: var(--pro-r) !important; }
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick, .tbx-info, .ws-options, .ws-status-slot) select { padding-right: 1.25rem !important; max-width: 11rem; }
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick, .tbx-info, .ws-status-slot) button { height: 1.375rem !important; min-height: 0 !important; min-width: 0 !important; padding: 0 .4375rem !important; font: .75rem var(--font) !important; color: var(--pro-ink) !important; background: transparent !important; border: 1px solid transparent !important; border-radius: var(--pro-r) !important; display: inline-flex; align-items: center; gap: .3125rem; flex-shrink: 0; box-shadow: none !important; }
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick, .tbx-info, .ws-status-slot) button:hover { background: var(--pro-hover) !important; }
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick, .tbx-info, .ws-status-slot) button:is([aria-pressed="true"], [aria-selected="true"], .is-on, .active) { background: linear-gradient(to top, var(--pro-accent) 2px, transparent 2px) var(--pro-press) !important; }
+.ws-skin-pro :is(.ws-view-controls, .tbx-quick, .tbx-info, .ws-status-slot) button :is(.bi, svg) { font-size: .875rem; width: auto; height: .875rem; color: var(--pro-icon); }
+
+.ws-skin-pro .ws-status-slot :is(select, input, button) { height: 1.25rem !important; }
+/* -- the tool chest (toolbox) and the tool palette -- */
+.ws-skin-pro .tbx-toolbox { background: var(--pro-panel); border-color: var(--pro-line); min-width: 11.5rem; }
+.ws-skin-pro .tbx-head { min-height: 1.75rem; padding: 0 .25rem 0 .5rem; background: var(--pro-bar); border-bottom: 1px solid var(--pro-line); font-size: .75rem; }
+.ws-skin-pro :is(.tbx-group > summary, .tbx-group-title) { padding: .3125rem .5rem; font-size: .6875rem; font-weight: 600; color: var(--pro-muted); background: var(--pro-band); border-block: 1px solid var(--pro-line-2); margin-top: -1px; }
+.ws-skin-pro .tbx-tools { gap: 0; padding: .1875rem .25rem .3125rem; }
+.ws-skin-pro .tbx-tool { min-height: 1.625rem; padding: .0625rem .5rem; gap: .5rem; font-size: .75rem; }
+.ws-skin-pro .tbx-tool :is(.bi, .ws-icon) { font-size: .9375rem; width: 1.0625rem; height: 1.0625rem; }
+.ws-skin-pro .tbx-tool.tbx-empty { border: 1px dashed var(--pro-line); color: var(--pro-muted); margin-block: .0625rem; }
+.ws-skin-pro .tbx-mine { border-bottom: 0; padding-bottom: 0; }
+.ws-skin-pro .vw-toolpalette { background: var(--pro-band); border-right: 1px solid var(--pro-line); }
+.ws-skin-pro .vw-pal { border-bottom: 1px solid var(--pro-line-2); }
+.ws-skin-pro .vw-pal-head { padding: .25rem .5rem; color: var(--pro-muted); border-bottom: 1px solid var(--pro-line-2); }
+.ws-skin-pro .vw-toolpalette :is(.vw-cell, .vw-row, .vw-set) { border-radius: var(--pro-r) !important; }
+.ws-skin-pro .vw-toolpalette :is(.vw-cell, .vw-row, .vw-set):hover { background: var(--pro-hover) !important; border-color: transparent !important; }
+.ws-skin-pro .ws-pet { padding: .1875rem; gap: .0625rem; }
+.ws-skin-pro .ws-pet-tool { width: 1.75rem; height: 1.75rem; border: 0; border-radius: var(--pro-r); }
+.ws-skin-pro .ws-pet-tool:hover { background: var(--pro-press); }
+.ws-skin-pro .ws-pet-tool .bi { font-size: .9375rem; }
+
+/* -- the status bar: one 1.5rem line; the command line is a real field with room to type; an app with a command line of its own keeps that one -- */
+.ws-skin-pro .ws-statusbar { height: 1.5rem; min-height: 1.5rem; padding: 0 .5rem; gap: .75rem; background: var(--pro-bar); border-top: 1px solid var(--pro-line); font-size: .6875rem; color: var(--pro-muted); }
+.ws-skin-pro .ws-statusbar .ws-layout-label { order: 9; padding-left: .75rem; border-left: 1px solid var(--pro-line); color: var(--pro-muted); }
+.ws-skin-pro .ws-status-slot { color: var(--pro-ink); }
+.ws-skin-pro .ws-status-slot > *, .ws-skin-pro .ws-status-slot > * :is(span, output, p, button, label, a) { font-size: .75rem !important; line-height: 1.25 !important; }
+.ws-skin-pro .ws-cmdline { flex: 0 1 22rem; min-width: 10rem; height: 1.25rem; padding: 0 .375rem; border: 1px solid var(--pro-line); border-radius: var(--pro-r); background: var(--pro-field); }
+.ws-skin-pro .ws-cmdline:focus-within { border-color: var(--pro-accent); }
+.ws-skin-pro .ws-cmdline .ws-cmd-input { font: .6875rem var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace); color: var(--pro-ink); }
+body.ws-skin-pro:has([data-cmd-input]:not(.ws-cmd-input)) .ws-statusbar .ws-cmdline { display: none; }
+body.ws-skin-pro > .ws-cmd-pop li[aria-selected="true"], body.ws-skin-pro > .ws-cmd-pop li:hover { background: var(--pro-press); color: var(--pro-ink); }
+/* -- a bar that holds more than fits: no scroll bar eating a strip under it; the wheel scrolls it sideways (app-workspace.js edges()) and the side with more behind it fades -- */
+.ws-skin-pro :is(.ws-ribbon, .ws-ribbon-tabs, .tr-row, .ws-drawing-tabs, .ws-view-controls, .tbx-quick, .ws-options, .tbx-info) { scrollbar-width: none; }
+.ws-skin-pro :is(.ws-ribbon, .tr-row, .ws-view-controls, .tbx-quick):is([data-ws-more="left"], [data-ws-more="both"])::before,
+.ws-skin-pro :is(.ws-ribbon, .tr-row, .ws-view-controls, .tbx-quick):is([data-ws-more="right"], [data-ws-more="both"])::after { content: ""; position: sticky; z-index: 2; flex: 0 0 2.5rem; align-self: stretch; pointer-events: none; }
+.ws-skin-pro :is(.ws-ribbon, .tr-row, .ws-view-controls, .tbx-quick)::before { left: 0; margin-right: -2.5rem; background: linear-gradient(to right, var(--pro-band) 15%, transparent); }
+.ws-skin-pro :is(.ws-ribbon, .tr-row, .ws-view-controls, .tbx-quick)::after { right: 0; margin-left: -2.5rem; background: linear-gradient(to left, var(--pro-band) 15%, transparent); }
+.ws-skin-pro .ws-ribbon::before { left: -.375rem; } .ws-skin-pro .ws-ribbon::after { right: -.375rem; }
+
+/* ---- 0.10 UI.6 layout format v2 (app-workspace-tools.js, app-workspace-overflow.js) ---- */
+/* look.names above: a group's name sits over its tools; look.zones gives one zone its own choice (data-ws-names on the region) */
+:is(.ws-names-above, [data-ws-names="above"]) .ws-group { flex-direction: column-reverse; justify-content: flex-end; }
+[data-ws-names="below"] .ws-group { flex-direction: column; justify-content: flex-start; }
+:is(.ws-names-above, [data-ws-names="above"]) .tbx-group-title, :is(.ws-names-above, [data-ws-names="above"]) .tbx-group > summary { order: -1; }
+/* a bar never wraps: it folds (look.overflow), or drops to its own row */
+.vw-menus, .tr-row { flex-wrap: nowrap; }
+.vw-menus { position: relative; }
+.ws-more-btn { flex: 0 0 auto; margin-inline-start: auto; min-width: 2rem; border: 1px solid var(--line, var(--ws-line)); background: var(--sheet, var(--ws-chrome)); color: var(--ink, inherit); border-radius: 0; }
+.ws-more-btn:focus-visible { outline: 2px solid var(--action, #1b7fb5); outline-offset: 1px; }
+.ws-more-pop { position: absolute; z-index: 30; inset-inline-end: 0; top: 100%; min-width: 10rem; display: flex; flex-direction: column; background: var(--sheet, var(--ws-chrome)); border: 1px solid var(--line, var(--ws-line)); }
+.ws-more-item { text-align: start; padding: .375rem .75rem; border: 0; background: transparent; color: var(--ink, inherit); font: inherit; }
+.ws-more-item:hover, .ws-more-item:focus-visible { background: color-mix(in srgb, var(--action, #1b7fb5) 14%, transparent); }
+[data-ws-drop] { flex-wrap: wrap; overflow: visible; }
+.tr-row[data-ws-drop] { overflow: visible; }
+
+/* ---- 0.10 UI.14 (lab builds): the icon set in the chrome that used to hold a Bootstrap glyph. blockIcon() (app-workspace-icons.js) draws svg.ccic.ws-icon-set there; the old
+   glyph's font-size was its width, so the drawing takes the same 1.125rem; the big tool tiles keep the sizes their own rules give. ---- */
+:is(.ws-shell-btn, .shell-grip-btn, .shell-grip-menu, .shell-grip-handle, .ws-rail-btn, .ws-pet-tool, .ws-props-btn, .shell-panel-menu button, .tbx-more > summary, .ws-drawing-tab button, .tbx-tab, .ws-tear, .shell-pintab, .ws-switch) .ws-icon-set { width: 1.125rem; height: 1.125rem; margin: 0; flex: 0 0 auto; vertical-align: -.2em; }
+.shell-grip-handle .ws-icon-set { width: 1rem; height: 1rem; margin-inline-end: .125rem; }
+.ws-rail-btn .ws-icon-set { width: 1.375rem; height: 1.375rem; }
+.shell-panel-menu button .ws-icon-set { margin-inline-end: .25rem; }
+:is(.ws-shell-btn, .shell-grip-btn, .ws-tear, .shell-pintab)[aria-pressed="true"] .ws-icon-set { --ic-line: var(--ws-blue, var(--action)); }
+
+/* ---- 0.10 UI.5 Arrange mode (app-workspace-edit.js): a handle on every block, the slot map while one is dragged ---- */
+.ws-arr-layer { position: fixed; inset: 0; z-index: 1500; pointer-events: none; }
+.ws-arr-handle { position: fixed; pointer-events: auto; cursor: grab; min-width: 1.5rem; height: 1.25rem; padding: 0 .25rem; font-size: .75rem; line-height: 1; letter-spacing: -.125rem; border: 1px solid var(--action, #1b7fb5); background: var(--sheet, #fff); color: var(--ink, #1c1c1c); border-radius: 0; touch-action: none; }
+.ws-arr-handle:focus-visible { outline: 2px solid var(--action, #1b7fb5); outline-offset: 1px; }
+.ws-arr-handle:active { cursor: grabbing; }
+.ws-arr-bar { position: fixed; z-index: 1600; inset-inline: 0; bottom: 1rem; margin-inline: auto; width: max-content; max-width: calc(100vw - 2rem); display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .5rem .75rem; background: var(--sheet, #fff); color: var(--ink, #1c1c1c); border: 1px solid var(--action, #1b7fb5); font-size: .875rem; }
+.ws-arr-bar button { font: inherit; padding: .25rem .75rem; border: 1px solid var(--line, #c9ced4); background: var(--sheet-2, #f5f6f7); color: inherit; border-radius: 0; }
+.ws-arr-bar button:disabled { opacity: .5; }
+.ws-arr-map { position: fixed; z-index: 1700; inset: 10vh 10vw auto 10vw; max-width: 44rem; margin-inline: auto; display: grid; gap: .25rem; padding: .5rem; background: color-mix(in srgb, var(--sheet, #fff) 94%, transparent); border: 1px solid var(--action, #1b7fb5); font-size: .8125rem; }
+.ws-arr-map[hidden] { display: none; }
+.ws-ap-mid { display: grid; grid-template-columns: 1fr 3fr 1fr; gap: .25rem; }
+.ws-ap-stage { display: grid; gap: .25rem; } .ws-ap-row { display: grid; grid-template-columns: 1fr 3fr 1fr; gap: .25rem; }
+.ws-ap-draw { display: grid; place-items: center; min-height: 3rem; border: 1px dashed var(--line, #c9ced4); color: var(--ink-2, #555); }
+.ws-ap-side { display: flex; gap: .25rem; }
+.ws-arr-place { padding: .5rem .25rem; border: 1px solid var(--line, #c9ced4); background: var(--sheet-2, #f5f6f7); color: var(--ink, #1c1c1c); border-radius: 0; font: inherit; }
+.ws-arr-place.ws-ap-ok { border-color: var(--action, #1b7fb5); }
+.ws-arr-place.ws-ap-no { opacity: .4; cursor: not-allowed; }
+.ws-arr-place.ws-ap-hot { background: color-mix(in srgb, var(--action, #1b7fb5) 25%, var(--sheet, #fff)); outline: 2px solid var(--action, #1b7fb5); }
+.ws-ctx-menu { z-index: 1800; }
+
+/* ---- 0.10 UI.7 the layout switcher (title bar and menu bar) ---- */
+.ws-switch { display: inline-flex; align-items: center; gap: .375rem; max-width: 14rem; padding: .125rem .5rem; border: 1px solid var(--line, var(--ws-line)); background: var(--sheet, transparent); color: var(--ink, inherit); border-radius: 0; font: inherit; font-size: .8125rem; }
+.ws-switch > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-switch:focus-visible { outline: 2px solid var(--action, #1b7fb5); outline-offset: 1px; }
+.ws-switch-caret { font-size: .625rem; }
+/* the pro skins set --ic-line on their own root (the grey icon ink), which beat the person's Outline colour set on <html> (bin/test-app-workspaces.mjs [6], failing since 0.10 UI.1's first run): the chosen colour wins in every skin */
+html[data-cc-icons="outline"] :is(.ws-skin-pro, .ws-skin-pro .ws-tool, .ws-skin-pro .tbx-tool, .ws-skin-pro .vw-cell, .ws-skin-pro .vw-row) { --ic-line: var(--cc-icon-color, #1b7fb5); }

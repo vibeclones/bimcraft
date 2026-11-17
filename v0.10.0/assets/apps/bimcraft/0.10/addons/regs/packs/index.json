@@ -1,0 +1,17 @@
+{
+  "format": "cadcraft-regulation-pack-list",
+  "version": 1,
+  "packs": [
+    "us-irc-2021",
+    "za-sans10400",
+    "us-sample-maker-stairs",
+    "za-sans10143",
+    "eu-en1993-1-8-bolts",
+    "us-sample-zoning",
+    "us-aashto-sight",
+    "gb-eng-planning",
+    "us-or-portland",
+    "us-sample-practice"
+  ],
+  "default": "us-irc-2021"
+}

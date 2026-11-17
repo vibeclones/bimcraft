@@ -1,0 +1,10 @@
+Liberation Sans 2.1.5 (Regular), from the Liberation Fonts project: https://github.com/liberationfonts/liberation-fonts
+Release 2.1.5, file liberation-fonts-ttf-2.1.5.tar.gz
+  https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz
+  sha256 of the tarball: 7191c669bf38899f73a2094ed00f7b800553364f90e2637010a69c0e268f25d0
+  sha256 of LiberationSans-Regular.ttf: 76d04c18ea243f426b7de1f3ad208e927008f961dc5945e5aad352d0dfde8ee8
+Unmodified. License: SIL Open Font License 1.1 (LICENSE, from the tarball); Reserved Font Names Liberation, Arimo.
+Used by CadCraft's plot.js (pdf-font.js) to print text outside Windows-1252 in PDFs: subset to the glyphs a drawing
+uses and embedded in the PDF (OFL 1.1 lets fonts be embedded in documents; the subset keeps the name Liberation
+Sans with a subset tag, as PDF subsetting does).
+Fetched 2026-10-20 (0.6.1 FIX-061-PDF-CHARS).
